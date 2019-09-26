@@ -152,10 +152,10 @@ int main()
 	//glm::mat4 trans = glm::mat4(1.0f);
 	//trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-
-	//TEST ROTERING
 	//glm::vec4 result = trans * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	//printf("%f, %f, %f\n", result.x, result.y, result.z);
+
+	//Hei på deg
 
 	int i = 0;
 
