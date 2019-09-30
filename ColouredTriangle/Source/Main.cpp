@@ -118,24 +118,35 @@ int main()
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	float positions[6] = {
-		-0.5f, -0.5f,
-		0.0f, 0.5f,
-		0.5f, -0.5f
-	
+	float positions[] = {
+		-0.5f, -0.5f, //0
+		 0.5f, -0.5f, //1
+		 0.5f,  0.5f, //2
+		-0.5f,  0.5f  //3
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,
+		2, 3, 0,
 	};
 
 	//Bærre sende openGL ein haug mæ bites, som æ floats. 
 	unsigned int buffer;
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	//Sjekk ut detta i dokumentasjon
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+	unsigned int indexbuffer;
+	glGenBuffers(1, &indexbuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
 	//JÆVLA COPY PASTE METODE
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
@@ -166,21 +177,22 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//Just to kick things off
-		i++;
+		//i++;
 
 		//Rotation from GLM library
-		glm::mat4 trans = glm::mat4(1.0f);
+		//glm::mat4 trans = glm::mat4(1.0f);
 		//For 3d rotasjon: sætt -M_PI/2
-		trans = glm::rotate(trans, i * glm::radians(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//trans = glm::rotate(trans, i * glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		
 		//Pass på uniTrans ID i de tilfellen du har meir enn 1 shaderprogram.
 
 		//Uniform
-		GLint uniTrans = glGetUniformLocation(shader, "trans");
-		glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+		//GLint uniTrans = glGetUniformLocation(shader, "trans");
+		//glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
 		//Draw triangle
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		//glDrawArrays(GL_TRIANGLES, 0, 4);
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
