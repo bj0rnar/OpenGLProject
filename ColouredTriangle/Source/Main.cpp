@@ -132,6 +132,22 @@ GLuint vertexArrayName;
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
 GLuint vertexBufferNames[8];
 
+//Camera variables 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+
+//Mouse callback
+void handleMouse(GLFWwindow* window, double xpos, double ypos);
+float lastX = DEFAULT_WIDTH / 2.0f;
+float lastY = DEFAULT_HEIGHT / 2.0f;
+bool firstMouse = true;
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+
+
 /*
  * Read shader source file from disk
  */
@@ -320,7 +336,9 @@ void drawGLScene() {
 
 	// Set the view matrix
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(-cameraProperties[0], -cameraProperties[1], -cameraProperties[2]));
+
+	//LookAt ny metode
+	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
 
@@ -438,6 +456,52 @@ void drawGLScene() {
 	glUseProgram(0);
 	glBindVertexArray(0);
 
+}
+
+void handleButtons(GLFWwindow *window) {
+
+	float speed = 0.01f;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += speed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= speed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
+}
+
+void handleMouse(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.05;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
 }
 
 void resizeGL(int width, int height) {
@@ -575,11 +639,18 @@ int main(void) {
 	// Initialize OpenGL view
 	resizeGL(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
+	//Nytt!
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, handleMouse);
+
 	// Run a loop until the window is closed
 	while (!glfwWindowShouldClose(window)) {
 
 		// Draw OpenGL screne
 		drawGLScene();
+
+		// ACtivate buttons!
+		handleButtons(window);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
