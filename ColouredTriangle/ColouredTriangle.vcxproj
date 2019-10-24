@@ -85,6 +85,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies/GLFW/include;%(AdditionalIncludeDirectories);$(SolutionDir)Dependencies/GLEW/include/GL/;$(SolutionDir)Dependencies/glm/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies/GLEW/lib/Release/x64/;$(SolutionDir)Dependencies/GLFW/lib-vc2017/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -114,6 +115,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies/GLFW/include;%(AdditionalIncludeDirectories);$(SolutionDir)Dependencies/GLEW/include/GL/;$(SolutionDir)Dependencies/glm/</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -127,6 +129,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\Shader.frag" />
+    <None Include="res\shaders\Shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
