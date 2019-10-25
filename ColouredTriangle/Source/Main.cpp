@@ -41,20 +41,20 @@
 // Vertices
 GLfloat vertices[] = {
 	// Front
-	-20.0f, 20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	-20.0f, -20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	20.0f, -20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	20.0f, 20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
 	// Back
 	20.0f, 20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
 	20.0f, -20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
 	-20.0f, -20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
 	-20.0f, 20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
 	// Left
-	-20.0f, 20.0f, -20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-	-20.0f, -20.0f, -20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-	-20.0f, -20.0f, 20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-	-20.0f, 20.0f, 20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+	-10.0f, 10.0f, -20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+	-20.0f, -10.0f, -20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+	-10.0f, -10.0f, 20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+	-10.0f, 10.0f, 20.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
 	// Right
 	20.0f, 20.0f, 20.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 	20.0f, -20.0f, 20.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -145,6 +145,8 @@ float lastY = DEFAULT_HEIGHT / 2.0f;
 bool firstMouse = true;
 float yaw = -90.0f;
 float pitch = 0.0f;
+
+int counter = 0;
 
 
 
@@ -344,6 +346,68 @@ void drawGLScene() {
 
 	//LIght
 
+
+	if (cameraPos.y >= -19.0f) {
+		cameraPos.y -= 0.1f;
+	}
+
+	if (cameraPos.y < -19.0f) {
+		cameraPos.y += 0.1f;
+	}
+
+	//Red warp to green
+	if (cameraPos.z <= -19.0f) {
+		cameraPos.z = 0.0f;
+		cameraPos.x = 19.0f;
+
+		glm::mat4 rotateCamera = glm::mat4(1.0f);
+		rotateCamera = glm::rotate(rotateCamera, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		cameraFront = glm::mat3(rotateCamera) * cameraFront;
+	}
+
+
+	//Black warp to top
+	if (cameraPos.z >= 19.0f) {
+		cameraPos.x = 0.0f;
+		cameraPos.z = 0.0f;
+		cameraPos.y = 100.0f;
+
+		/*
+		glm::mat4 turnCameraDown = glm::mat4(1.0f);
+		turnCameraDown = glm::rotate(turnCameraDown, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		
+		cameraFront = glm::mat3(turnCameraDown) * cameraFront;
+		*/
+	}
+
+
+
+	/*
+	if (cameraPos.z >= 19.0f) {
+		cameraPos.z = -19.0f;
+	}
+	/*
+	if (cameraPos.x <= -19.0f) {
+		cameraPos.x = 19.0f;
+	}
+
+	if (cameraPos.x >= 19.0f) {
+		cameraPos.x = -19.0f;
+	}
+
+	*/
+
+	counter++;
+
+	if (counter == 500) {
+		std::cout << "x: " << cameraPos.x << std::endl;
+		std::cout << "y: " << cameraPos.y << std::endl;
+		std::cout << "z: " << cameraPos.z << std::endl;
+		std::cout << "----------- " << std::endl;
+
+		counter = 0;
+	}
 
 	glm::vec4 lightP = glm::make_vec4(lightPosition);
 
