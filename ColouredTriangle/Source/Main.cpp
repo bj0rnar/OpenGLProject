@@ -10,6 +10,9 @@
 #define DEFAULT_WIDTH 1024
 #define DEFAULT_HEIGHT 768
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "../tiny_obj_loader.h"
+
 // Vertex Buffer Identifiers
 #define VERTICES 0
 #define INDICES 1
@@ -567,6 +570,8 @@ void handleMouse(GLFWwindow* window, double xpos, double ypos)
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(front);
 }
+
+
 
 void resizeGL(int width, int height) {
 

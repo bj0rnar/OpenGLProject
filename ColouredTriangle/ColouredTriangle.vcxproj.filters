@@ -23,4 +23,9 @@
     <None Include="res\shaders\Shader.frag" />
     <None Include="res\shaders\Shader.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\LARS SIN GITHUB\itf21219_examples-master\glfw\obj_import\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
