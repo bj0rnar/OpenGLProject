@@ -20,6 +20,11 @@
 #define CAMERA_PROPERTIES 6
 //Run, would you kindly?
 #define DYNAMIC_LIGHT 7
+#define BOX_MODEL 8
+#define BOX_INDICES 9
+#define BOX_VERTICIES 10
+#define NUM_BUFFERS 11
+
 
 // Vertex Array attributes
 #define POSITION 0
@@ -41,10 +46,10 @@
 // Vertices
 GLfloat vertices[] = {
 	// Front
-	-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	-20.0f, 20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	-20.0f, -20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	20.0f, -20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+	20.0f, 20.0f, 20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
 	// Back
 	20.0f, 20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
 	20.0f, -20.0f, -20.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f,
@@ -70,6 +75,18 @@ GLfloat vertices[] = {
 	-20.0f, -20.0f, -20.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
 	20.0f, -20.0f, -20.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
 	20.0f, -20.0f, 20.0f,  0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f
+};
+
+GLfloat box[] = {
+	-5.0f, -5.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+	-5.0f, -5.0f, -0.0f, 9.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f,
+	5.0f, -5.0f, -0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+	5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f
+};
+
+GLushort boxindices[]{
+	// Front
+	0, 1, 2, 2, 3, 0,
 };
 
 GLushort indices[]{
@@ -123,20 +140,26 @@ GLfloat *projectionMatrixPtr;
 GLfloat *viewMatrixPtr;
 GLfloat *modelMatrixPtr;
 
+// POINTER FOR BOX
+GLfloat *boxModelMatrixPtr;
+
 // Pointer for light pos
 GLfloat *lightPosPtr;
 
 // Names
 GLuint programName;
 GLuint vertexArrayName;
+
+// EGEN BOX VERTEX ARRAY
+GLuint boxVertexArray;
+
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
-GLuint vertexBufferNames[8];
+GLuint vertexBufferNames[11];
 
 //Camera variables 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
 
 //Mouse callback
 void handleMouse(GLFWwindow* window, double xpos, double ypos);
@@ -200,8 +223,15 @@ int initGL() {
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-	// Create and initialize 4 buffer names
-	glCreateBuffers(8, vertexBufferNames);
+	// Create and initialize 4 buffer names, DENNA Æ 9 NÅ.
+	glCreateBuffers(11, vertexBufferNames);
+
+	//EGEN BUFFER
+	//glCreateBuffers(1, boxVertexBufferName);
+
+	//NAMED BUFFER STORAGE.
+	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 4 * 9 * sizeof(GLfloat), box, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX_INDICES], 6 * sizeof(GLshort), boxindices, 0);
 
 	// Allocate storage for the vertex array buffers
 	glNamedBufferStorage(vertexBufferNames[VERTICES], 6 * 4 * 9 * sizeof(GLfloat), vertices, 0);
@@ -215,6 +245,8 @@ int initGL() {
 	// Allocate storage for the transformation matrices and retrieve their addresses
 	glNamedBufferStorage(vertexBufferNames[GLOBAL_MATRICES], 16 * sizeof(GLfloat) * 2, NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 	glNamedBufferStorage(vertexBufferNames[MODEL_MATRIX], 16 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+	
+	glNamedBufferStorage(vertexBufferNames[BOX_MODEL], 16 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
 	//GJØR LYS DYNAMISK.
 	//glNamedBufferStorage(vertexBufferNames[DYNAMIC_LIGHT], 4 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
@@ -236,32 +268,55 @@ int initGL() {
 	modelMatrixPtr = (GLfloat *)glMapNamedBufferRange(vertexBufferNames[MODEL_MATRIX], 0, 16 * sizeof(GLfloat),
 		GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 
+	boxModelMatrixPtr = (GLfloat *)glMapNamedBufferRange(vertexBufferNames[BOX_MODEL], 0, 16 * sizeof(GLfloat),
+		GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
 	lightPosPtr = (GLfloat *)glMapNamedBufferRange(vertexBufferNames[DYNAMIC_LIGHT], 0, 4 * sizeof(GLfloat),
 		GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 
 	// Create and initialize a vertex array object
 	glCreateVertexArrays(1, &vertexArrayName);
+	glCreateVertexArrays(1, &boxVertexArray);
+
 
 	// Associate attributes with binding points
 	glVertexArrayAttribBinding(vertexArrayName, POSITION, STREAM0);
 	glVertexArrayAttribBinding(vertexArrayName, COLOR, STREAM0);
 	glVertexArrayAttribBinding(vertexArrayName, NORMAL, STREAM0);
 
+	
+	glVertexArrayAttribBinding(boxVertexArray, POSITION, STREAM0);
+	glVertexArrayAttribBinding(boxVertexArray, COLOR, STREAM0);
+	glVertexArrayAttribBinding(boxVertexArray, NORMAL, STREAM0);
+	
+
 	// Specify attribute format
 	glVertexArrayAttribFormat(vertexArrayName, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
 	glVertexArrayAttribFormat(vertexArrayName, COLOR, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
 	glVertexArrayAttribFormat(vertexArrayName, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
-
+	
+	glVertexArrayAttribFormat(boxVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribFormat(boxVertexArray, COLOR, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
+	glVertexArrayAttribFormat(boxVertexArray, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
+	
 	// Enable the attributes
 	glEnableVertexArrayAttrib(vertexArrayName, POSITION);
 	glEnableVertexArrayAttrib(vertexArrayName, COLOR);
 	glEnableVertexArrayAttrib(vertexArrayName, NORMAL);
-
+	
+	glEnableVertexArrayAttrib(boxVertexArray, POSITION);
+	glEnableVertexArrayAttrib(boxVertexArray, COLOR);
+	glEnableVertexArrayAttrib(boxVertexArray, NORMAL);
+	
 	// Bind the indices to the vertex array
 	glVertexArrayElementBuffer(vertexArrayName, vertexBufferNames[INDICES]);
+	
+	glVertexArrayElementBuffer(boxVertexArray, vertexBufferNames[BOX_INDICES]);
 
 	// Bind the vertex buffer to the vertex array
 	glVertexArrayVertexBuffer(vertexArrayName, STREAM0, vertexBufferNames[VERTICES], 0, 9 * sizeof(GLfloat));
+
+	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 9 * sizeof(GLfloat));
 
 	// Load and compile vertex shader
 	GLuint vertexName = glCreateShader(GL_VERTEX_SHADER);
@@ -346,7 +401,7 @@ void drawGLScene() {
 
 	//LIght
 
-
+	/*
 	if (cameraPos.y >= -19.0f) {
 		cameraPos.y -= 0.1f;
 	}
@@ -354,7 +409,7 @@ void drawGLScene() {
 	if (cameraPos.y < -19.0f) {
 		cameraPos.y += 0.1f;
 	}
-
+	
 	//Red warp to green
 	if (cameraPos.z <= -19.0f) {
 		cameraPos.z = 0.0f;
@@ -379,9 +434,9 @@ void drawGLScene() {
 		
 		cameraFront = glm::mat3(turnCameraDown) * cameraFront;
 		*/
-	}
+	//}
 
-
+	
 
 	/*
 	if (cameraPos.z >= 19.0f) {
@@ -395,9 +450,13 @@ void drawGLScene() {
 	if (cameraPos.x >= 19.0f) {
 		cameraPos.x = -19.0f;
 	}
+	
+	//glBufferData (something something, GL_STATIC_DRAW) versjon 3.3
+	kan heller bruke glNamedBufferStorage(vertexBufferNames[MODEL_BOX]) nåvernende versjon.
+
 
 	*/
-
+	
 	counter++;
 
 	if (counter == 500) {
@@ -428,6 +487,15 @@ void drawGLScene() {
 		0, 0, 1, 0,
 		0, 0, 0, 1 };
 	memcpy(modelMatrixPtr, scale, 16 * sizeof(GLfloat));
+	
+	
+	GLfloat test[16] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1 };
+	memcpy(boxModelMatrixPtr, test, 16 * sizeof(GLfloat));
+	
 	
 	/*
 	glm::mat4 model = glm::mat4(1.0f);
@@ -497,13 +565,16 @@ void drawGLScene() {
 	memcpy(modelMatrixPtr, scale, 16 * sizeof(GLfloat));
 	*/
 	// Activate the program
+
 	glUseProgram(programName);
 
 
 
 	// Activate the vertex array
 	glBindVertexArray(vertexArrayName);
+	
 
+	
 	// Bind buffers to GLSL uniform indices
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM0, vertexBufferNames[GLOBAL_MATRICES]);
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[MODEL_MATRIX]);
@@ -512,9 +583,18 @@ void drawGLScene() {
 	glBindBufferBase(GL_UNIFORM_BUFFER, CAMERA, vertexBufferNames[CAMERA_PROPERTIES]);
 	//BIND TO GLSL
 	glBindBufferBase(GL_UNIFORM_BUFFER, DYNAMICLIGHT, vertexBufferNames[DYNAMIC_LIGHT]);
-
-	// Draw the vertex array
+	
+	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+	
+	
+	// ACtivate neste vertex
+	glBindVertexArray(boxVertexArray);
+
+	//Draw neste model
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+	
 
 	// Disable
 	glUseProgram(0);
