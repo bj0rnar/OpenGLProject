@@ -78,15 +78,16 @@ GLfloat vertices[] = {
 };
 
 GLfloat box[] = {
-	-5.0f, -5.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-	-5.0f, -5.0f, -0.0f, 9.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f,
-	5.0f, -5.0f, -0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-	5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f
+	-5.0f, 5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	-5.0f, -5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	5.0f, -5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	5.0f, 5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
 GLushort boxindices[]{
 	// Front
-	0, 1, 2, 2, 3, 0,
+	0, 1, 2, 2, 3, 0
+
 };
 
 GLushort indices[]{
@@ -231,7 +232,7 @@ int initGL() {
 
 	//NAMED BUFFER STORAGE.
 	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 4 * 9 * sizeof(GLfloat), box, 0);
-	glNamedBufferStorage(vertexBufferNames[BOX_INDICES], 6 * sizeof(GLshort), boxindices, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * sizeof(GLshort), boxindices, 0);
 
 	// Allocate storage for the vertex array buffers
 	glNamedBufferStorage(vertexBufferNames[VERTICES], 6 * 4 * 9 * sizeof(GLfloat), vertices, 0);
@@ -594,7 +595,7 @@ void drawGLScene() {
 	//Draw neste model
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-	
+	//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Disable
 	glUseProgram(0);
