@@ -128,6 +128,8 @@
     <ClCompile Include="Source\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\shaders\RenderShader.frag" />
+    <None Include="res\shaders\RenderShader.vert" />
     <None Include="res\shaders\Shader.frag" />
     <None Include="res\shaders\Shader.vert" />
   </ItemGroup>

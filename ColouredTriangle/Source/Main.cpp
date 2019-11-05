@@ -42,6 +42,9 @@
 #define CAMERA 4
 #define DYNAMICLIGHT 9
 
+// GLSL SHADER 2
+#define TRANSFORM5 5
+#define TRANSFORM6 6
 
 // Vertices
 GLfloat vertices[] = {
@@ -153,6 +156,11 @@ GLuint vertexArrayName;
 
 // EGEN BOX VERTEX ARRAY
 GLuint boxVertexArray;
+
+// Texture
+GLuint textureTest;
+GLuint frameBuffer;
+GLuint renderProgram;
 
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
 GLuint vertexBufferNames[11];
@@ -319,6 +327,133 @@ int initGL() {
 
 	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 9 * sizeof(GLfloat));
 
+	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
+
+
+	//Mekk framebuffer
+	glGenFramebuffers(1, &frameBuffer);
+	//BIND FRAMEBUFFER
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	//Lag
+	glGenTextures(1, &textureTest);
+	//Bind
+	glBindTexture(GL_TEXTURE_2D, textureTest);
+	// Tom texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureTest, 0);
+
+
+	// Unbind
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	/*
+	// mekk framebuffer
+	unsigned int framebuffer;
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	// generate texture
+	unsigned int texColorBuffer;
+	glGenTextures(1, &texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// attach it to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+
+	//Render buffer object
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+
+	// DETTA KJØRE, MEN ALT BLI SVART.
+	/*
+	glGenTextures(1, &texture_map);
+	glBindTexture(GL_TEXTURE_2D, texture_map);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 768, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Build the texture that will serve as the depth attachment for the framebuffer.
+	GLuint depth_texture;
+	glGenTextures(1, &depth_texture);
+	glBindTexture(GL_TEXTURE_2D, depth_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Build the framebuffer.
+	GLuint framebuffer;
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)framebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_map, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+		// Error
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	*/
+
+	/*
+	GLuint frameBuffer = 0;
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	GLuint renderToTexture;
+	glGenTextures(GL_TEXTURE_2D, &renderToTexture);
+
+	glBindTexture(GL_TEXTURE_2D, renderToTexture);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	GLuint depthrenderbuffer;
+	glGenRenderbuffers(1, &depthrenderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderToTexture, 0);
+
+
+	GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	glViewport(0, 0, 1024, 768);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		return false;
+		*/
+		//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
+
 	// Load and compile vertex shader
 	GLuint vertexName = glCreateShader(GL_VERTEX_SHADER);
 	int vertexLength = 0;
@@ -357,6 +492,46 @@ int initGL() {
 	}
 	free(fragmentSource);
 
+	// RENDER TO TEXTURE --------------------------------------------------
+
+	GLuint renderVertex = glCreateShader(GL_VERTEX_SHADER);
+	int rendervertexLength = 0;
+	char *rendervertexSource = readSourceFile("res/shaders/RenderShader.vert", &rendervertexLength);
+	glShaderSource(renderVertex, 1, (const char * const *)&rendervertexSource, &rendervertexLength);
+	glCompileShader(renderVertex);
+	glGetShaderiv(renderVertex, GL_COMPILE_STATUS, &compileStatus);
+	if (!compileStatus) {
+		GLint logSize = 0;
+		glGetShaderiv(renderVertex, GL_INFO_LOG_LENGTH, &logSize);
+		char *errorLog = (char *)malloc(sizeof(char) * logSize);
+		glGetShaderInfoLog(renderVertex, logSize, &logSize, errorLog);
+		glDeleteShader(renderVertex);
+		printf("VERTEX ERROR %s\n", errorLog);
+		return 0;
+	}
+	free(rendervertexSource);
+
+	// Load and compile fragment shader
+	GLuint renderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+	int renderfragmentLength = 0;
+	char *renderfragmentSource = readSourceFile("res/shaders/RenderShader.frag", &renderfragmentLength);
+	glShaderSource(renderFragment, 1, (const char * const *)&renderfragmentSource, &renderfragmentLength);
+	glCompileShader(renderFragment);
+	glGetShaderiv(renderFragment, GL_COMPILE_STATUS, &compileStatus);
+	if (!compileStatus) {
+		GLint logSize = 0;
+		glGetShaderiv(renderFragment, GL_INFO_LOG_LENGTH, &logSize);
+		char *errorLog = (char *)malloc(sizeof(char) * logSize);
+		glGetShaderInfoLog(renderFragment, logSize, &logSize, errorLog);
+		glDeleteShader(renderFragment);
+
+		printf("FRAGMENT ERROR %s\n", errorLog);
+		return 0;
+	}
+	free(renderfragmentSource);
+
+	// RENDER TO TEXTURE --------------------------------------------------
+
 	// Create and link vertex program
 	programName = glCreateProgram();
 	glAttachShader(programName, vertexName);
@@ -376,6 +551,29 @@ int initGL() {
 
 	// Enable depth buffer testing
 	glEnable(GL_DEPTH_TEST);
+
+
+	// PROGRAM 2 -----------------------------------------------
+
+	renderProgram = glCreateProgram();
+	glAttachShader(renderProgram, renderVertex);
+	glAttachShader(renderProgram, renderFragment);
+	glLinkProgram(renderProgram);
+	GLint renderlinkStatus;
+	glGetProgramiv(renderProgram, GL_LINK_STATUS, &renderlinkStatus);
+	if (!renderlinkStatus) {
+		GLint logSize = 0;
+		glGetProgramiv(renderProgram, GL_INFO_LOG_LENGTH, &logSize);
+		char *errorLog = (char *)malloc(sizeof(char) * logSize);
+		glGetProgramInfoLog(renderProgram, logSize, &logSize, errorLog);
+
+		printf("LINK ERROR %s\n", errorLog);
+		return 0;
+	}
+
+
+	// PROGRAM 2 -----------------------------------------------
+
 
 	return 1;
 
@@ -588,12 +786,17 @@ void drawGLScene() {
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
-	
+
+	glUseProgram(0);
+
+	glUseProgram(renderProgram);
+
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
 
 	//Draw neste model
-	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM5, vertexBufferNames[GLOBAL_MATRICES]);
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM6, vertexBufferNames[BOX_MODEL]);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	//glDrawArrays(GL_TRIANGLES, 0, 36);
 
