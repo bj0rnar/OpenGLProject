@@ -161,6 +161,7 @@ GLuint boxVertexArray;
 GLuint textureTest;
 GLuint frameBuffer;
 GLuint renderProgram;
+GLuint renderBufferObject;
 
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
 GLuint vertexBufferNames[11];
@@ -329,27 +330,53 @@ int initGL() {
 
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
+	
 
+	/*\
 	//Mekk framebuffer
 	glGenFramebuffers(1, &frameBuffer);
 	//BIND FRAMEBUFFER
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-	//Lag
+	//LAG TEXTURE, KOBLE TEXTURE TE FRAMEBUFFER
 	glGenTextures(1, &textureTest);
 	//Bind
 	glBindTexture(GL_TEXTURE_2D, textureTest);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureTest, 0);
+
+
+	// RENDER BUFFER OBJECT
+	glGenRenderbuffers(1, &renderBufferObject);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	//Attach framebuffer & renderbufferobject
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
+
+
+
+	/*
 	// Tom texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureTest, 0);
+	*/
 
+	/*
 
 	// Unbind
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	 
+	*/
 
 	/*
 	// mekk framebuffer
@@ -550,7 +577,7 @@ int initGL() {
 	}
 
 	// Enable depth buffer testing
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 
 
 	// PROGRAM 2 -----------------------------------------------
@@ -585,10 +612,13 @@ int initGL() {
  */
 
 void drawGLScene() {
-
+	/*
+	//STEP 1
+	glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	*/
 
 	// Set the view matrix
 	glm::mat4 view = glm::mat4(1.0f);
@@ -597,6 +627,8 @@ void drawGLScene() {
 	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
+
+	
 
 	//LIght
 
@@ -765,8 +797,16 @@ void drawGLScene() {
 	*/
 	// Activate the program
 
+	/*
+	glBindBuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	*/
+
 	glUseProgram(programName);
 
+
+	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
 
 
 	// Activate the vertex array
@@ -786,23 +826,40 @@ void drawGLScene() {
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
+	//glBindBuffer(GL_FRAMEBUFFER, 0);
 
 	glUseProgram(0);
 
 	glUseProgram(renderProgram);
 
+
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
+	//glDisable(GL_DEPTH_TEST);
+	
+	
+	
+	//glBindTexture(GL_TEXTURE_2D, textureTest);
 
-	//Draw neste model
+	// FRAMEBUFFAH
+	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	//glViewport(0, 0, 512, 512);
+
+	//Bind GLSL for shader 2 
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM5, vertexBufferNames[GLOBAL_MATRICES]);
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM6, vertexBufferNames[BOX_MODEL]);
+
+	// Tegn greia
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-	//glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Disable
 	glUseProgram(0);
 	glBindVertexArray(0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 
 }
 
