@@ -81,10 +81,10 @@ GLfloat vertices[] = {
 };
 
 GLfloat box[] = {
-	-5.0f, 5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	-5.0f, -5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	5.0f, -5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	5.0f, 5.0f, -10.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	-5.0f, 5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	-5.0f, -5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	5.0f, -5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	5.0f, 5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
 GLushort boxindices[]{
@@ -161,6 +161,8 @@ GLuint boxVertexArray;
 GLuint textureTest;
 GLuint frameBuffer;
 GLuint renderProgram;
+
+GLuint renderBufferObject;
 
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
 GLuint vertexBufferNames[11];
@@ -329,26 +331,44 @@ int initGL() {
 
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
-
-	//Mekk framebuffer
-	glGenFramebuffers(1, &frameBuffer);
-	//BIND FRAMEBUFFER
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
+	// ----------------- TEXTURE -----------------------
 	//Lag
 	glGenTextures(1, &textureTest);
 	//Bind
 	glBindTexture(GL_TEXTURE_2D, textureTest);
 	// Tom texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureTest, 0);
-
-
 	// Unbind
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// ----------------- RENDER BUFFER OBJECT -----------------------
+
+	glGenRenderbuffers(1, &renderBufferObject);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// ----------------- FRAMEBUFFER -----------------------
+
+	//Mekk framebuffer
+	glGenFramebuffers(1, &frameBuffer);
+	//BIND FRAMEBUFFER
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	// BIND FRAMEBUFFER & TEXTURE
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureTest, 0);
+	
+	//Attach framebuffer & renderbufferobject
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	//----------------------- DELETE --------------------------
+	glDeleteRenderbuffers(1, &renderBufferObject);
+	glDeleteTextures(1, &textureTest);
+	glDeleteFramebuffers(1, &frameBuffer);
+
 
 
 	/*
@@ -586,6 +606,9 @@ int initGL() {
 
 void drawGLScene() {
 
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -765,6 +788,8 @@ void drawGLScene() {
 	*/
 	// Activate the program
 
+	//glBindBuffer(GL_FRAMEBUFFER, 0);
+
 	glUseProgram(programName);
 
 
@@ -787,23 +812,34 @@ void drawGLScene() {
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
 
+
 	glUseProgram(0);
 
+	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	
 	glUseProgram(renderProgram);
+	
+
+
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
+	glBindTexture(GL_TEXTURE_2D, textureTest);
 
 	//Draw neste model
+
+	//TRENGS DENNA?
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM5, vertexBufferNames[GLOBAL_MATRICES]);
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM6, vertexBufferNames[BOX_MODEL]);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-	//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Disable
 	glUseProgram(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(0);
-
+	
 }
 
 void handleButtons(GLFWwindow *window) {
@@ -994,8 +1030,14 @@ int main(void) {
 	// Run a loop until the window is closed
 	while (!glfwWindowShouldClose(window)) {
 
+		//BIND FRAMEBUFFER FØRST
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
 		// Draw OpenGL screne
 		drawGLScene();
+
+		//FJERN FØR E KJØM TE SWAP BUFFER
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// ACtivate buttons!
 		handleButtons(window);
