@@ -31,6 +31,9 @@
 #define COLOR 1
 #define NORMAL 2
 
+// VERTEX FOR SHADER 2?
+//#define UV 4
+
 // Vertex Array binding points
 #define STREAM0 0
 
@@ -297,8 +300,7 @@ int initGL() {
 
 	
 	glVertexArrayAttribBinding(boxVertexArray, POSITION, STREAM0);
-	glVertexArrayAttribBinding(boxVertexArray, COLOR, STREAM0);
-	glVertexArrayAttribBinding(boxVertexArray, NORMAL, STREAM0);
+	//glVertexArrayAttribBinding(boxVertexArray, UV, STREAM0);
 	
 
 	// Specify attribute format
@@ -307,8 +309,7 @@ int initGL() {
 	glVertexArrayAttribFormat(vertexArrayName, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
 	
 	glVertexArrayAttribFormat(boxVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
-	glVertexArrayAttribFormat(boxVertexArray, COLOR, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
-	glVertexArrayAttribFormat(boxVertexArray, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
+	//glVertexArrayAttribFormat(boxVertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
 	
 	// Enable the attributes
 	glEnableVertexArrayAttrib(vertexArrayName, POSITION);
@@ -316,8 +317,7 @@ int initGL() {
 	glEnableVertexArrayAttrib(vertexArrayName, NORMAL);
 	
 	glEnableVertexArrayAttrib(boxVertexArray, POSITION);
-	glEnableVertexArrayAttrib(boxVertexArray, COLOR);
-	glEnableVertexArrayAttrib(boxVertexArray, NORMAL);
+	//glEnableVertexArrayAttrib(boxVertexArray, UV);
 	
 	// Bind the indices to the vertex array
 	glVertexArrayElementBuffer(vertexArrayName, vertexBufferNames[INDICES]);
@@ -811,9 +811,13 @@ void drawGLScene() {
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
-
+	
 
 	glUseProgram(0);
+
+
+	//glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, 0);
+
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
@@ -821,22 +825,22 @@ void drawGLScene() {
 	glUseProgram(renderProgram);
 	
 
-
-
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
-	glBindTexture(GL_TEXTURE_2D, textureTest);
+	//glBindTexture(GL_TEXTURE_2D, textureTest);
 
 	//Draw neste model
 
 	//TRENGS DENNA?
-	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM5, vertexBufferNames[GLOBAL_MATRICES]);
-	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM6, vertexBufferNames[BOX_MODEL]);
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM0, vertexBufferNames[GLOBAL_MATRICES]);
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
+
+
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
 	// Disable
 	glUseProgram(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(0);
 	
