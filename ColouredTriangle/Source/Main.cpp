@@ -23,7 +23,10 @@
 #define BOX_MODEL 8
 #define BOX_INDICES 9
 #define BOX_VERTICIES 10
-#define NUM_BUFFERS 11
+#define FLOOR_VERTICES 11
+#define FLOOR_INDICES 12
+#define FLOOR_MODEL 13
+#define NUM_BUFFERS 14
 
 
 // Vertex Array attributes
@@ -90,10 +93,21 @@ GLfloat box[] = {
 	5.0f, 5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
+GLfloat floor[] = {
+	-10.0f, -10.0f, 10.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+	-10.0f, -10.0f, -10.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+	10.0f, -10.0f, -10.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+	10.0f, -10.0f, 10.0f,  0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f
+};
+
 GLushort boxindices[]{
 	// Front
 	0, 1, 2, 2, 3, 0
 
+};
+
+GLushort floorindicies[] {
+	0, 1, 2, 2, 3, 0
 };
 
 GLushort indices[]{
@@ -149,6 +163,7 @@ GLfloat *modelMatrixPtr;
 
 // POINTER FOR BOX
 GLfloat *boxModelMatrixPtr;
+GLfloat *floorModelMatrixPtr;
 
 // Pointer for light pos
 GLfloat *lightPosPtr;
@@ -159,6 +174,7 @@ GLuint vertexArrayName;
 
 // EGEN BOX VERTEX ARRAY
 GLuint boxVertexArray;
+GLuint floorVertexArray;
 
 // Texture
 GLuint textureTest;
@@ -168,7 +184,7 @@ GLuint renderProgram;
 GLuint renderBufferObject;
 
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
-GLuint vertexBufferNames[11];
+GLuint vertexBufferNames[14];
 
 //Camera variables 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -184,6 +200,9 @@ float yaw = -90.0f;
 float pitch = 0.0f;
 
 int counter = 0;
+
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+GLuint fbo, fbo_texture, rbo_depth;
 
 
 
@@ -238,7 +257,7 @@ int initGL() {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 	// Create and initialize 4 buffer names, DENNA Æ 9 NÅ.
-	glCreateBuffers(11, vertexBufferNames);
+	glCreateBuffers(14, vertexBufferNames);
 
 	//EGEN BUFFER
 	//glCreateBuffers(1, boxVertexBufferName);
@@ -246,6 +265,11 @@ int initGL() {
 	//NAMED BUFFER STORAGE.
 	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 4 * 9 * sizeof(GLfloat), box, 0);
 	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * sizeof(GLshort), boxindices, 0);
+
+	//Named buffer storage
+	glNamedBufferStorage(vertexBufferNames[FLOOR_VERTICES], 4 * 9 * sizeof(GLshort), floor, 0);
+
+	glNamedBufferStorage(vertexBufferNames[FLOOR_INDICES],  6 * sizeof(GLshort), floorindicies, 0);
 
 	// Allocate storage for the vertex array buffers
 	glNamedBufferStorage(vertexBufferNames[VERTICES], 6 * 4 * 9 * sizeof(GLfloat), vertices, 0);
@@ -261,6 +285,9 @@ int initGL() {
 	glNamedBufferStorage(vertexBufferNames[MODEL_MATRIX], 16 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 	
 	glNamedBufferStorage(vertexBufferNames[BOX_MODEL], 16 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+
+
+	glNamedBufferStorage(vertexBufferNames[FLOOR_MODEL], 16 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
 	//GJØR LYS DYNAMISK.
 	//glNamedBufferStorage(vertexBufferNames[DYNAMIC_LIGHT], 4 * sizeof(GLfloat), NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
@@ -288,9 +315,13 @@ int initGL() {
 	lightPosPtr = (GLfloat *)glMapNamedBufferRange(vertexBufferNames[DYNAMIC_LIGHT], 0, 4 * sizeof(GLfloat),
 		GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 
+	floorModelMatrixPtr = (GLfloat *)glMapNamedBufferRange(vertexBufferNames[FLOOR_MODEL], 0, 16 * sizeof(GLfloat),
+		GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
 	// Create and initialize a vertex array object
 	glCreateVertexArrays(1, &vertexArrayName);
 	glCreateVertexArrays(1, &boxVertexArray);
+	glCreateVertexArrays(1, &floorVertexArray);
 
 
 	// Associate attributes with binding points
@@ -300,7 +331,8 @@ int initGL() {
 
 	
 	glVertexArrayAttribBinding(boxVertexArray, POSITION, STREAM0);
-	//glVertexArrayAttribBinding(boxVertexArray, UV, STREAM0);
+
+	glVertexArrayAttribBinding(floorVertexArray, POSITION, STREAM0);
 	
 
 	// Specify attribute format
@@ -309,7 +341,8 @@ int initGL() {
 	glVertexArrayAttribFormat(vertexArrayName, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
 	
 	glVertexArrayAttribFormat(boxVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
-	//glVertexArrayAttribFormat(boxVertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
+
+	glVertexArrayAttribFormat(floorVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
 	
 	// Enable the attributes
 	glEnableVertexArrayAttrib(vertexArrayName, POSITION);
@@ -317,19 +350,60 @@ int initGL() {
 	glEnableVertexArrayAttrib(vertexArrayName, NORMAL);
 	
 	glEnableVertexArrayAttrib(boxVertexArray, POSITION);
-	//glEnableVertexArrayAttrib(boxVertexArray, UV);
+	
+	glEnableVertexArrayAttrib(floorVertexArray, POSITION);
 	
 	// Bind the indices to the vertex array
 	glVertexArrayElementBuffer(vertexArrayName, vertexBufferNames[INDICES]);
 	
 	glVertexArrayElementBuffer(boxVertexArray, vertexBufferNames[BOX_INDICES]);
 
+	glVertexArrayElementBuffer(floorVertexArray, vertexBufferNames[FLOOR_INDICES]);
+
 	// Bind the vertex buffer to the vertex array
 	glVertexArrayVertexBuffer(vertexArrayName, STREAM0, vertexBufferNames[VERTICES], 0, 9 * sizeof(GLfloat));
 
 	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 9 * sizeof(GLfloat));
 
+	glVertexArrayVertexBuffer(floorVertexArray, STREAM0, vertexBufferNames[FLOOR_VERTICES], 0, 9 * sizeof(GLfloat));
+
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
+	
+	
+	// AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa
+
+
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &fbo_texture);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 768, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	/* Depth buffer */
+	glGenRenderbuffers(1, &rbo_depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo_depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 1024, 768);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	/* Framebuffer to link everything together */
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_depth);
+	GLenum status;
+	if ((status = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+		fprintf(stderr, "glCheckFramebufferStatus: error %p", status);
+		return 0;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+	/*
 
 	// ----------------- TEXTURE -----------------------
 	//Lag
@@ -370,7 +444,7 @@ int initGL() {
 	glDeleteFramebuffers(1, &frameBuffer);
 
 
-
+	*/
 	/*
 	// mekk framebuffer
 	unsigned int framebuffer;
@@ -606,12 +680,17 @@ int initGL() {
 
 void drawGLScene() {
 
+	
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
 
 	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+	//Her?
+	//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	// Set the view matrix
 	glm::mat4 view = glm::mat4(1.0f);
@@ -711,14 +790,21 @@ void drawGLScene() {
 	memcpy(modelMatrixPtr, scale, 16 * sizeof(GLfloat));
 	
 	
-	GLfloat test[16] = {
+	GLfloat boxScale[16] = {
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1 };
-	memcpy(boxModelMatrixPtr, test, 16 * sizeof(GLfloat));
+	memcpy(boxModelMatrixPtr, boxScale, 16 * sizeof(GLfloat));
+
+	GLfloat floorScale[16] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1 };
+	memcpy(floorModelMatrixPtr, floorScale, 16 * sizeof(GLfloat));
 	
-	
+
 	/*
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
@@ -796,7 +882,6 @@ void drawGLScene() {
 
 	// Activate the vertex array
 	glBindVertexArray(vertexArrayName);
-	
 
 	
 	// Bind buffers to GLSL uniform indices
@@ -807,14 +892,25 @@ void drawGLScene() {
 	glBindBufferBase(GL_UNIFORM_BUFFER, CAMERA, vertexBufferNames[CAMERA_PROPERTIES]);
 	//BIND TO GLSL
 	glBindBufferBase(GL_UNIFORM_BUFFER, DYNAMICLIGHT, vertexBufferNames[DYNAMIC_LIGHT]);
+
+	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[FLOOR_MODEL]);
 	
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
+
+	// WAT
 	
+
 
 	glUseProgram(0);
 
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// Unbind her?
+	
 
 	//glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, 0);
 
@@ -824,10 +920,16 @@ void drawGLScene() {
 	
 	glUseProgram(renderProgram);
 	
+	// ÆÆÆÆ?
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture);
+	
+
 
 	// ACtivate neste vertex
+	
 	glBindVertexArray(boxVertexArray);
-	//glBindTexture(GL_TEXTURE_2D, textureTest);
+	
 
 	//Draw neste model
 
@@ -840,7 +942,7 @@ void drawGLScene() {
 
 	// Disable
 	glUseProgram(0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(0);
 	
@@ -1035,13 +1137,13 @@ int main(void) {
 	while (!glfwWindowShouldClose(window)) {
 
 		//BIND FRAMEBUFFER FØRST
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		// Draw OpenGL screne
 		drawGLScene();
 
 		//FJERN FØR E KJØM TE SWAP BUFFER
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// ACtivate buttons!
 		handleButtons(window);
