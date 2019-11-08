@@ -3,7 +3,10 @@
 // Incoming interpolated UV coordinates.
 layout (location = 0) in Block
 {
-    vec2 UV;
+    vec3 interpolatedColor;
+    vec3 N;
+    vec3 worldVertex;
+	vec2 UV;
 };
 
 // Outgoing final color.

@@ -9,6 +9,9 @@ layout (location = 1) in vec3 color;
 // Incoming normal
 layout (location = 2) in vec3 normal;
 
+// UV for Texture
+layout (location = 3) in vec2 uv;
+
 // Projection and view matrices.
 layout (binding = 0, std140) uniform Transform0
 {
@@ -28,6 +31,7 @@ layout (location = 0) out Block
     vec3 interpolatedColor;
     vec3 N;
     vec3 worldVertex;
+	vec2 UV;
 };
 
 void main() {
@@ -41,8 +45,10 @@ void main() {
     // Set the transformed normal
     N = mat3(model) * normal;
 
-
     // We assign the color to the outgoing variable.
     interpolatedColor = color;
+
+	//Redirect incoming UV to outgoing uv
+	UV = uv;
 
 }

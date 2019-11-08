@@ -4,13 +4,13 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec2 uv;
 
-layout (binding = 0) uniform Transform5
+layout (binding = 0) uniform Transform0
 {
     mat4 proj;
     mat4 view;
 };
 
-layout (binding = 1) uniform Transform6
+layout (binding = 1) uniform Transform1
 {
     mat4 model;
 };

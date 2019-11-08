@@ -7,6 +7,10 @@
 #include <glm/ext.hpp>
 #include <iostream>
 
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define DEFAULT_WIDTH 1024
 #define DEFAULT_HEIGHT 768
 
@@ -30,9 +34,7 @@
 #define POSITION 0
 #define COLOR 1
 #define NORMAL 2
-
-// VERTEX FOR SHADER 2?
-//#define UV 4
+#define UV 3
 
 // Vertex Array binding points
 #define STREAM0 0
@@ -84,10 +86,10 @@ GLfloat vertices[] = {
 };
 
 GLfloat box[] = {
-	-5.0f, 5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	-5.0f, -5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	5.0f, -5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	5.0f, 5.0f, -10.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	-5.0f, 5.0f, -10.0f, 0.0f, 4.0f,
+	-5.0f, -5.0f, -10.0f, 0.0f, 0.0f, 
+	5.0f, -5.0f, -10.0f, 4.0f, 0.0f,
+	5.0f, 5.0f, -10.0f, 4.0f, 4.0f, 
 };
 
 GLushort boxindices[]{
@@ -170,6 +172,11 @@ GLuint renderBufferObject;
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
 GLuint vertexBufferNames[11];
 
+GLuint textureName;
+
+
+GLint width, height, numChannels;
+
 //Camera variables 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -244,7 +251,7 @@ int initGL() {
 	//glCreateBuffers(1, boxVertexBufferName);
 
 	//NAMED BUFFER STORAGE.
-	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 4 * 9 * sizeof(GLfloat), box, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 5 * 4 * sizeof(GLfloat), box, 0);
 	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * sizeof(GLshort), boxindices, 0);
 
 	// Allocate storage for the vertex array buffers
@@ -290,6 +297,8 @@ int initGL() {
 
 	// Create and initialize a vertex array object
 	glCreateVertexArrays(1, &vertexArrayName);
+
+	//BOX
 	glCreateVertexArrays(1, &boxVertexArray);
 
 
@@ -300,7 +309,7 @@ int initGL() {
 
 	
 	glVertexArrayAttribBinding(boxVertexArray, POSITION, STREAM0);
-	//glVertexArrayAttribBinding(boxVertexArray, UV, STREAM0);
+	glVertexArrayAttribBinding(boxVertexArray, UV, STREAM0);
 	
 
 	// Specify attribute format
@@ -309,7 +318,7 @@ int initGL() {
 	glVertexArrayAttribFormat(vertexArrayName, NORMAL, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT));
 	
 	glVertexArrayAttribFormat(boxVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
-	//glVertexArrayAttribFormat(boxVertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
+	glVertexArrayAttribFormat(boxVertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
 	
 	// Enable the attributes
 	glEnableVertexArrayAttrib(vertexArrayName, POSITION);
@@ -317,7 +326,7 @@ int initGL() {
 	glEnableVertexArrayAttrib(vertexArrayName, NORMAL);
 	
 	glEnableVertexArrayAttrib(boxVertexArray, POSITION);
-	//glEnableVertexArrayAttrib(boxVertexArray, UV);
+	glEnableVertexArrayAttrib(boxVertexArray, UV);
 	
 	// Bind the indices to the vertex array
 	glVertexArrayElementBuffer(vertexArrayName, vertexBufferNames[INDICES]);
@@ -327,25 +336,141 @@ int initGL() {
 	// Bind the vertex buffer to the vertex array
 	glVertexArrayVertexBuffer(vertexArrayName, STREAM0, vertexBufferNames[VERTICES], 0, 9 * sizeof(GLfloat));
 
-	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 9 * sizeof(GLfloat));
+	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 5 * sizeof(GLfloat));
 
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
+	
+	//_--------------------------------------------LARSTEXTURE----------------------------------------
+	// ------------------------------------------ DETTA FUNKE ----------------------------------------
+	
+	//GLubyte *imageData = stbi_load("texture.png", &width, &height, &numChannels, 3);
+	
+	GLubyte *imageData = stbi_load("texture.png", &width, &height, &numChannels, 3);
+	
+	// Generate texture name
+	//Sets the unsigned int to generate a texture ($textureName is just an GLuint)
+	glGenTextures(1, &textureName);
 
+	// Bind the texture
+	// Binds the unsigned int to GL_TEXTURE_2D, OpenGL's library for generating 2d texture
+	glBindTexture(GL_TEXTURE_2D, textureName);
+
+	// Specify the format of the texture
+	// Specifies the actual image data. still targeting the texture above. 
+	// 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+
+	// Set the sampler parameters
+	//How to magnifiy the texels
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//How to minify the the texcels
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//What happens when you go beyond
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//Beyond again.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Generate mip maps
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Deactivate texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	
+
+	//_--------------------------------------------LARSTEXTURE----------------------------------------
+	// ------------------------------------------ DETTA FUNKE ----------------------------------------
+	
+	/*
+	// Generate texture name
+	//Sets the unsigned int to generate a texture ($textureName is just an GLuint)
+	glGenTextures(1, &textureName);
+
+	// Bind the texture
+	// Binds the unsigned int to GL_TEXTURE_2D, OpenGL's library for generating 2d texture
+	glBindTexture(GL_TEXTURE_2D, textureName);
+
+	// Specify the format of the texture
+	// Specifies the actual image data. still targeting the texture above. 
+	// 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	// Set the sampler parameters
+	//How to magnifiy the texels
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//How to minify the the texcels
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//What happens when you go beyond
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//Beyond again.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Generate mip maps
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Deactivate texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	//Lag
+	glGenRenderbuffers(1, &renderBufferObject);
+	//Bind
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+	//Render buffer
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	//Bind renderBuffer
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// ----------------- FRAMEBUFFER -----------------------
+
+	//Mekk framebuffer
+	glGenFramebuffers(1, &frameBuffer);
+	//BIND FRAMEBUFFER
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	// BIND FRAMEBUFFER & TEXTURE
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureName, 0);
+
+	//Attach framebuffer & renderbufferobject
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	*/
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/*
 	// ----------------- TEXTURE -----------------------
 	//Lag
 	glGenTextures(1, &textureTest);
 	//Bind
 	glBindTexture(GL_TEXTURE_2D, textureTest);
 	// Tom texture
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 	// Unbind
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// ----------------- RENDER BUFFER OBJECT -----------------------
 
+	//Lag
 	glGenRenderbuffers(1, &renderBufferObject);
+	//Bind
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+	//Render buffer
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	//Bind renderBuffer
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	// ----------------- FRAMEBUFFER -----------------------
@@ -364,7 +489,7 @@ int initGL() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-	//----------------------- DELETE --------------------------
+	//----------------------- DELETE ?--------------------------
 	glDeleteRenderbuffers(1, &renderBufferObject);
 	glDeleteTextures(1, &textureTest);
 	glDeleteFramebuffers(1, &frameBuffer);
@@ -513,7 +638,7 @@ int initGL() {
 	free(fragmentSource);
 
 	// RENDER TO TEXTURE --------------------------------------------------
-
+	/* PRØVE UTTA DENNA
 	GLuint renderVertex = glCreateShader(GL_VERTEX_SHADER);
 	int rendervertexLength = 0;
 	char *rendervertexSource = readSourceFile("res/shaders/RenderShader.vert", &rendervertexLength);
@@ -530,7 +655,7 @@ int initGL() {
 		return 0;
 	}
 	free(rendervertexSource);
-
+	*/
 	// Load and compile fragment shader
 	GLuint renderFragment = glCreateShader(GL_FRAGMENT_SHADER);
 	int renderfragmentLength = 0;
@@ -576,7 +701,7 @@ int initGL() {
 	// PROGRAM 2 -----------------------------------------------
 
 	renderProgram = glCreateProgram();
-	glAttachShader(renderProgram, renderVertex);
+	glAttachShader(renderProgram, vertexName);
 	glAttachShader(renderProgram, renderFragment);
 	glLinkProgram(renderProgram);
 	GLint renderlinkStatus;
@@ -611,7 +736,9 @@ void drawGLScene() {
 	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
+	//BIND FRAMEBUFFER HER
+	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
 	// Set the view matrix
 	glm::mat4 view = glm::mat4(1.0f);
@@ -797,7 +924,6 @@ void drawGLScene() {
 	// Activate the vertex array
 	glBindVertexArray(vertexArrayName);
 	
-
 	
 	// Bind buffers to GLSL uniform indices
 	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM0, vertexBufferNames[GLOBAL_MATRICES]);
@@ -808,10 +934,12 @@ void drawGLScene() {
 	//BIND TO GLSL
 	glBindBufferBase(GL_UNIFORM_BUFFER, DYNAMICLIGHT, vertexBufferNames[DYNAMIC_LIGHT]);
 	
+
+
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	
-	
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glUseProgram(0);
 
@@ -821,25 +949,32 @@ void drawGLScene() {
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	glUseProgram(renderProgram);
 	
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
-	//glBindTexture(GL_TEXTURE_2D, textureTest);
+	glBindTexture(GL_TEXTURE_2D, textureName);
 
 	//Draw neste model
 
+
+
 	//TRENGS DENNA?
-	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM0, vertexBufferNames[GLOBAL_MATRICES]);
-	glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
+	//glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM0, vertexBufferNames[GLOBAL_MATRICES]);
+	//glBindBufferBase(GL_UNIFORM_BUFFER, TRANSFORM1, vertexBufferNames[BOX_MODEL]);
 
 
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
+	
+
 	// Disable
-	glUseProgram(0);
+	//glUseProgram(0);
 	//glBindTexture(GL_TEXTURE_2D, 0);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(0);
@@ -1035,13 +1170,13 @@ int main(void) {
 	while (!glfwWindowShouldClose(window)) {
 
 		//BIND FRAMEBUFFER FØRST
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
 		// Draw OpenGL screne
 		drawGLScene();
 
 		//FJERN FØR E KJØM TE SWAP BUFFER
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// ACtivate buttons!
 		handleButtons(window);
