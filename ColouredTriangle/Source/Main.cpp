@@ -342,7 +342,7 @@ int initGL() {
 	
 	//_--------------------------------------------LARSTEXTURE----------------------------------------
 	// ------------------------------------------ DETTA FUNKE ----------------------------------------
-	
+	/*
 	//GLubyte *imageData = stbi_load("texture.png", &width, &height, &numChannels, 3);
 	
 	GLubyte *imageData = stbi_load("texture.png", &width, &height, &numChannels, 3);
@@ -376,11 +376,52 @@ int initGL() {
 	// Deactivate texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-	
+	*/
 
 	//_--------------------------------------------LARSTEXTURE----------------------------------------
 	// ------------------------------------------ DETTA FUNKE ----------------------------------------
 	
+
+	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	// The texture we're going to render to
+	glGenTextures(1, &textureName);
+
+	// "Bind" the newly created texture : all future texture functions will modify this texture
+	glBindTexture(GL_TEXTURE_2D, textureName);
+
+	// Give an empty image to OpenGL ( the last "0" )
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	// Poor filtering. Needed !
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	// The depth buffer
+	glGenRenderbuffers(1, &renderBufferObject);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
+
+	// Set "renderedTexture" as our colour attachement #0
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureName, 0);
+
+	// Set the list of draw buffers.
+	GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+	// Always check that our framebuffer is ok
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		return false;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	glViewport(0, 0, 1024, 768);
+
+
+
+
 	/*
 	// Generate texture name
 	//Sets the unsigned int to generate a texture ($textureName is just an GLuint)
@@ -411,12 +452,14 @@ int initGL() {
 	// Deactivate texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
+	//Renderbuffer kanskje ikkje nødvendig?
+
 	//Lag
 	glGenRenderbuffers(1, &renderBufferObject);
 	//Bind
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
 	//Render buffer
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
 	//Bind renderBuffer
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -431,15 +474,17 @@ int initGL() {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureName, 0);
 
 	//Attach framebuffer & renderbufferobject
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	//Viewport
+	//glViewport(0, 0, 1024, 768);
 
+	
+
+	
 	*/
-
-	
-	
 	
 	
 	
@@ -731,6 +776,8 @@ int initGL() {
 
 void drawGLScene() {
 
+	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
+
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
@@ -949,9 +996,6 @@ void drawGLScene() {
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	glUseProgram(renderProgram);
 	
@@ -1170,13 +1214,17 @@ int main(void) {
 	while (!glfwWindowShouldClose(window)) {
 
 		//BIND FRAMEBUFFER FØRST
-		//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		glViewport(0, 0, 1024, 768);
 
 		// Draw OpenGL screne
 		drawGLScene();
 
 		//FJERN FØR E KJØM TE SWAP BUFFER
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, 1024, 768);
+
+		drawGLScene();
 
 		// ACtivate buttons!
 		handleButtons(window);
