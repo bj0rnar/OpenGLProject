@@ -86,16 +86,23 @@ GLfloat vertices[] = {
 };
 
 GLfloat box[] = {
-	-5.0f, 5.0f, -10.0f, 0.0f, 1.0f,
-	-5.0f, -5.0f, -10.0f, 0.0f, 0.0f, 
-	5.0f, -5.0f, -10.0f, 1.0f, 0.0f,
-	5.0f, 5.0f, -10.0f, 1.0f, 1.0f, 
+	//Front
+	-5.0f, -10.0f, -19.0f, 0.0f, 1.0f,
+	-5.0f, -20.0f, -19.0f, 0.0f, 0.0f, 
+	5.0f, -20.0f, -19.0f, 1.0f, 0.0f,
+	5.0f, -10.0f, -19.0f, 1.0f, 1.0f, 
+	//Back
+	19.0f, -10.0f, 5.0f, 0.0f, 1.0f,
+	19.0f, -20.0f, 5.0f, 0.0f, 0.0f,
+	19.0f, -20.0f, -5.0f, 1.0f, 0.0f,
+	19.0f, -10.0f, -5.0f, 1.0f, 1.0f,
 };
 
 GLushort boxindices[]{
-	// Front
-	0, 1, 2, 2, 3, 0
-
+	//Front
+	0, 1, 2, 2, 3, 0,
+	//Back
+	4, 5, 6, 6, 7, 4
 };
 
 GLushort indices[]{
@@ -251,8 +258,8 @@ int initGL() {
 	//glCreateBuffers(1, boxVertexBufferName);
 
 	//NAMED BUFFER STORAGE.
-	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 5 * 4 * sizeof(GLfloat), box, 0);
-	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * sizeof(GLshort), boxindices, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 5 * 4 * 2 *  sizeof(GLfloat), box, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * 2 * sizeof(GLshort), boxindices, 0);
 
 	// Allocate storage for the vertex array buffers
 	glNamedBufferStorage(vertexBufferNames[VERTICES], 6 * 4 * 9 * sizeof(GLfloat), vertices, 0);
@@ -798,7 +805,7 @@ void drawGLScene() {
 
 	//LIght
 
-	/*
+	//PsuedoGravity
 	if (cameraPos.y >= -19.0f) {
 		cameraPos.y -= 0.1f;
 	}
@@ -806,7 +813,7 @@ void drawGLScene() {
 	if (cameraPos.y < -19.0f) {
 		cameraPos.y += 0.1f;
 	}
-	
+	/*
 	//Red warp to green
 	if (cameraPos.z <= -19.0f) {
 		cameraPos.z = 0.0f;
