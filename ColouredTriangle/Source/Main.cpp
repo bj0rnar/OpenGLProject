@@ -650,9 +650,9 @@ void drawFBOScene(glm::mat4 view) {
 
 	// TEST
 	
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
-	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
+	//glm::mat4 model = glm::mat4(1.0f);
+	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
+	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 	
 
 	glUseProgram(programName);
@@ -673,7 +673,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
-	//glBindTexture(GL_TEXTURE_2D, textureName);
+	glBindTexture(GL_TEXTURE_2D, textureName);
 
 
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
@@ -681,7 +681,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// Disable
 	glUseProgram(0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 
 }
@@ -842,8 +842,8 @@ int main(void) {
 		glViewport(0, 0, 1024, 768);
 
 		//Draw in FBO
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		//view = glm::lookAt(glm::vec3(-5.0f, -10.0f, -19.0f), glm::vec3(0.0f, 0.0f, -19.0f), cameraUp);
+		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		view = glm::lookAt(glm::vec3(2.0f, -18.0f, -18.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBOScene(view);
 
@@ -857,7 +857,7 @@ int main(void) {
 		glViewport(0, 0, 1024, 768);
 
 		//Draw IRL
-		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		drawGLScene(view);
 
 		// Fencing?=???
