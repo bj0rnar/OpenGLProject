@@ -159,10 +159,6 @@ GLfloat *modelMatrixPtr;
 // POINTER FOR BOX
 GLfloat *boxModelMatrixPtr;
 
-//POINTER FOR FBO VIEW & PROJ
-GLfloat *fboProjectionMatrixPtr;
-GLfloat *fboViewMatrixPtr;
-
 // Pointer for light pos
 GLfloat *lightPosPtr;
 
@@ -201,7 +197,6 @@ glm::mat4 view = glm::mat4(1.0f);
 
 //Mouse callback
 void handleMouse(GLFWwindow* window, double xpos, double ypos);
-void setShaders();
 float lastX = DEFAULT_WIDTH / 2.0f;
 float lastY = DEFAULT_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -388,8 +383,8 @@ int initGL() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	glViewport(0, 0, 1024, 768);
+	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	//glViewport(0, 0, 1024, 768);
 
 
 
@@ -546,14 +541,6 @@ void drawGLScene(glm::mat4 view) {
 
 	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
-	/*
-	if (fboToggle) {
-		memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
-	}
-	else {
-		memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
-	}
-	*/
 	//LIght
 
 	//PsuedoGravity
@@ -618,6 +605,8 @@ void drawGLScene(glm::mat4 view) {
 	glBindBufferBase(GL_UNIFORM_BUFFER, CAMERA, vertexBufferNames[CAMERA_PROPERTIES]);
 	//BIND TO GLSL
 	glBindBufferBase(GL_UNIFORM_BUFFER, DYNAMICLIGHT, vertexBufferNames[DYNAMIC_LIGHT]);
+	
+
 
 	// Draw første gang
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
@@ -645,6 +634,56 @@ void drawGLScene(glm::mat4 view) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 	
+}
+
+void drawFBOScene(glm::mat4 view) {
+
+	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
+	// Clear color and depth buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
+
+	// TEST
+	
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
+	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
+	
+
+	glUseProgram(programName);
+
+	// Activate the vertex array
+	glBindVertexArray(vertexArrayName);
+
+
+	// Draw første gang
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+
+	glUseProgram(0);
+
+
+	glUseProgram(renderProgram);
+
+
+	// ACtivate neste vertex
+	glBindVertexArray(boxVertexArray);
+	//glBindTexture(GL_TEXTURE_2D, textureName);
+
+
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+
+	// Disable
+	glUseProgram(0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+
 }
 
 
@@ -803,21 +842,25 @@ int main(void) {
 		glViewport(0, 0, 1024, 768);
 
 		//Draw in FBO
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		//view = glm::lookAt(glm::vec3(-5.0f, -10.0f, -19.0f), glm::vec3(0.0f, 0.0f, -19.0f), cameraUp);
-		drawGLScene(view);
+		//drawGLScene(view);
+		drawFBOScene(view);
 
 		//FENCING???
-		glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
+		glFinish();
 
 		//FJERN FØR E KJØM TE SWAP BUFFER
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, 1024, 768);
 
 		//Draw IRL
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		drawGLScene(view);
 
-
+		// Fencing?=???
 		glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		// ACtivate buttons!
