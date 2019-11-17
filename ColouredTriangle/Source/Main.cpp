@@ -601,7 +601,6 @@ void drawGLScene(glm::mat4 view) {
 
 	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
-	//LIght
 
 	//PsuedoGravity
 	if (cameraPos.y >= -19.0f) {
@@ -686,7 +685,6 @@ void drawGLScene(glm::mat4 view) {
 	//Draw før texture biten.
 	glBindVertexArray(box2VertexArray);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// ACtivate neste vertex
@@ -734,16 +732,20 @@ void drawFBOScene(glm::mat4 view) {
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
 	
-	//Draw utta texture
-	glBindVertexArray(box2VertexArray);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-
+	
 
 	glUseProgram(0);
 
 
 	glUseProgram(renderProgram);
 	
+
+	//Draw utta texture
+	glBindTexture(GL_TEXTURE_2D, textureName2);
+	glBindVertexArray(box2VertexArray);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
@@ -789,15 +791,19 @@ void drawFBO2Scene(glm::mat4 view) {
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
 
-	//Draw utta texture
-	glBindVertexArray(box2VertexArray);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
 
 	glUseProgram(0);
 
 
 	glUseProgram(renderProgram);
+
+
+	//Draw utta texture
+	glBindTexture(GL_TEXTURE_2D, textureName2);
+	glBindVertexArray(box2VertexArray);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 
 	// ACtivate neste vertex
@@ -972,7 +978,9 @@ int main(void) {
 
 		//Draw in FBO
 		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		view = glm::lookAt(glm::vec3(2.0f, -18.0f, -18.0f), cameraPos, cameraUp);
+		// "Riktig veig"
+		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
+		view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBOScene(view);
 
@@ -988,7 +996,9 @@ int main(void) {
 
 		//Draw in FBO
 		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		view = glm::lookAt(glm::vec3(19.0f, -19.0f, 0.0f), cameraPos, cameraUp);
+		// " Riktig veig"
+		//view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
+		view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBO2Scene(view);
 
