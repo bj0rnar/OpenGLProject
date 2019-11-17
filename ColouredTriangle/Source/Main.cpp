@@ -27,7 +27,8 @@
 #define BOX_MODEL 8
 #define BOX_INDICES 9
 #define BOX_VERTICIES 10
-#define NUM_BUFFERS 11
+#define BOX2_VERTICIES 11
+#define NUM_BUFFERS 12
 
 
 // Vertex Array attributes
@@ -86,23 +87,23 @@ GLfloat vertices[] = {
 };
 
 GLfloat box[] = {
-	//Front
 	-5.0f, -10.0f, -19.0f, 0.0f, 1.0f,
 	-5.0f, -20.0f, -19.0f, 0.0f, 0.0f, 
 	5.0f, -20.0f, -19.0f, 1.0f, 0.0f,
 	5.0f, -10.0f, -19.0f, 1.0f, 1.0f, 
-	//Back
+};
+
+GLfloat box2[] = {
 	19.0f, -10.0f, 5.0f, 0.0f, 1.0f,
 	19.0f, -20.0f, 5.0f, 0.0f, 0.0f,
 	19.0f, -20.0f, -5.0f, 1.0f, 0.0f,
 	19.0f, -10.0f, -5.0f, 1.0f, 1.0f,
 };
 
+
 GLushort boxindices[]{
 	//Front
 	0, 1, 2, 2, 3, 0,
-	//Back
-	4, 5, 6, 6, 7, 4
 };
 
 GLushort indices[]{
@@ -168,18 +169,26 @@ GLuint vertexArrayName;
 
 // EGEN BOX VERTEX ARRAY
 GLuint boxVertexArray;
+GLuint box2VertexArray;
 
 // Texture
-GLuint textureTest;
+
 GLuint frameBuffer;
 GLuint renderProgram;
-
 GLuint renderBufferObject;
 
 // HOLDER PÅ ALLE BUFFERE, CAPS ØVERST.
-GLuint vertexBufferNames[11];
+GLuint vertexBufferNames[12];
 
 GLuint textureName;
+
+
+//Verden nr 2??
+
+GLuint framebuffer2;
+GLuint renderBufferObject2;
+GLuint textureName2;
+
 
 
 GLint width, height, numChannels;
@@ -204,9 +213,6 @@ float yaw = -90.0f;
 float pitch = 0.0f;
 
 int counter = 0;
-
-//Brukt for å toggle FBO
-bool fboToggle = false;
 
 
 
@@ -261,10 +267,11 @@ int initGL() {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 	// Create and initialize 4 buffer names, DENNA Æ 9 NÅ.
-	glCreateBuffers(11, vertexBufferNames);
+	glCreateBuffers(12, vertexBufferNames);
 
 	//NAMED BUFFER STORAGE.
 	glNamedBufferStorage(vertexBufferNames[BOX_VERTICIES], 5 * 4 * 2 *  sizeof(GLfloat), box, 0);
+	glNamedBufferStorage(vertexBufferNames[BOX2_VERTICIES], 5 * 4 * 2 *  sizeof(GLfloat), box2, 0);
 	glNamedBufferStorage(vertexBufferNames[BOX_INDICES],  6 * 2 * sizeof(GLshort), boxindices, 0);
 
 	// Allocate storage for the vertex array buffers
@@ -310,6 +317,10 @@ int initGL() {
 	glCreateVertexArrays(1, &boxVertexArray);
 
 
+	glCreateVertexArrays(1, &box2VertexArray);
+
+
+
 	// Associate attributes with binding points
 	glVertexArrayAttribBinding(vertexArrayName, POSITION, STREAM0);
 	glVertexArrayAttribBinding(vertexArrayName, COLOR, STREAM0);
@@ -319,6 +330,9 @@ int initGL() {
 	glVertexArrayAttribBinding(boxVertexArray, POSITION, STREAM0);
 	glVertexArrayAttribBinding(boxVertexArray, UV, STREAM0);
 	
+	glVertexArrayAttribBinding(box2VertexArray, POSITION, STREAM0);
+	glVertexArrayAttribBinding(box2VertexArray, UV, STREAM0);
+
 
 	// Specify attribute format
 	glVertexArrayAttribFormat(vertexArrayName, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
@@ -328,6 +342,9 @@ int initGL() {
 	glVertexArrayAttribFormat(boxVertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
 	glVertexArrayAttribFormat(boxVertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
 	
+	glVertexArrayAttribFormat(box2VertexArray, POSITION, 3, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribFormat(box2VertexArray, UV, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT));
+
 	// Enable the attributes
 	glEnableVertexArrayAttrib(vertexArrayName, POSITION);
 	glEnableVertexArrayAttrib(vertexArrayName, COLOR);
@@ -335,16 +352,21 @@ int initGL() {
 	
 	glEnableVertexArrayAttrib(boxVertexArray, POSITION);
 	glEnableVertexArrayAttrib(boxVertexArray, UV);
+
+	glEnableVertexArrayAttrib(box2VertexArray, POSITION);
+	glEnableVertexArrayAttrib(box2VertexArray, UV);
 	
 	// Bind the indices to the vertex array
 	glVertexArrayElementBuffer(vertexArrayName, vertexBufferNames[INDICES]);
 	
 	glVertexArrayElementBuffer(boxVertexArray, vertexBufferNames[BOX_INDICES]);
+	glVertexArrayElementBuffer(box2VertexArray, vertexBufferNames[BOX_INDICES]);
 
 	// Bind the vertex buffer to the vertex array
 	glVertexArrayVertexBuffer(vertexArrayName, STREAM0, vertexBufferNames[VERTICES], 0, 9 * sizeof(GLfloat));
 
 	glVertexArrayVertexBuffer(boxVertexArray, STREAM0, vertexBufferNames[BOX_VERTICIES], 0, 5 * sizeof(GLfloat));
+	glVertexArrayVertexBuffer(box2VertexArray, STREAM0, vertexBufferNames[BOX2_VERTICIES], 0, 5 * sizeof(GLfloat));
 
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
@@ -382,11 +404,49 @@ int initGL() {
 	// stjælt sjækk
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
+	//_-----------------------------------------------------------------------------------------------------------------------------
+	//_-----------------------------------------------------------------------------------------------------------------------------
+	//_------------------------------------------------VERDEN 2-------------------------------------------------------
+	//_-----------------------------------------------------------------------------------------------------------------------------
+	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+	glGenFramebuffers(1, &framebuffer2);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	//glViewport(0, 0, 1024, 768);
+	// The texture we're going to render to
+	glGenTextures(1, &textureName2);
+
+	// "Bind" the newly created texture : all future texture functions will modify this texture
+	glBindTexture(GL_TEXTURE_2D, textureName2);
+
+	// tomt bilde
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	// CUSTOMIZE SJØL
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 
+	// "render buffer object"
+	glGenRenderbuffers(1, &renderBufferObject2);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject2);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject2);
+
+	// COLOR ATTACHMENT
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureName2, 0);
+
+	// draw buffaaaaaahs
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+	// stjælt sjækk
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		return false;
+
+
+	//_-----------------------------------------------------------------------------------------------------------------------------
+	//_-----------------------------------------------------------------------------------------------------------------------------
+	//_------------------------------------------------VERDEN 2-------------------------------------------------------
+	//_-----------------------------------------------------------------------------------------------------------------------------
 
 		//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
@@ -593,6 +653,10 @@ void drawGLScene(glm::mat4 view) {
 
 	// Activate the vertex array
 	glBindVertexArray(vertexArrayName);
+
+
+
+
 	
 	
 	
@@ -618,16 +682,21 @@ void drawGLScene(glm::mat4 view) {
 	glUseProgram(renderProgram);
 	
 
+	glBindTexture(GL_TEXTURE_2D, textureName2);
+	//Draw før texture biten.
+	glBindVertexArray(box2VertexArray);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
 	glBindTexture(GL_TEXTURE_2D, textureName);
 
-
-
-
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
-	
+
+
 
 	// Disable
 	glUseProgram(0);
@@ -662,6 +731,66 @@ void drawFBOScene(glm::mat4 view) {
 
 
 	// Draw første gang
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+	
+	//Draw utta texture
+	glBindVertexArray(box2VertexArray);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+
+	glUseProgram(0);
+
+
+	glUseProgram(renderProgram);
+	
+
+	// ACtivate neste vertex
+	glBindVertexArray(boxVertexArray);
+	glBindTexture(GL_TEXTURE_2D, textureName);
+
+
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+
+	// Disable
+	glUseProgram(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+
+}
+
+void drawFBO2Scene(glm::mat4 view) {
+
+	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
+	// Clear color and depth buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
+
+	// TEST
+
+	//glm::mat4 model = glm::mat4(1.0f);
+	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
+	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
+
+
+	glUseProgram(programName);
+
+	// Activate the vertex array
+	glBindVertexArray(vertexArrayName);
+
+
+	// Draw første gang
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+
+	//Draw utta texture
+	glBindVertexArray(box2VertexArray);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
 
@@ -851,6 +980,20 @@ int main(void) {
 		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		glFinish();
+
+		//VERDEN 2???????????????
+
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
+		glViewport(0, 0, 1024, 768);
+
+		//Draw in FBO
+		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		view = glm::lookAt(glm::vec3(19.0f, -19.0f, 0.0f), cameraPos, cameraUp);
+		//drawGLScene(view);
+		drawFBO2Scene(view);
+
+		glFinish();
+
 
 		//FJERN FØR E KJØM TE SWAP BUFFER
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
