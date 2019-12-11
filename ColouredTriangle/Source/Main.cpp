@@ -654,6 +654,8 @@ void drawGLScene(glm::mat4 view) {
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1 };
+
+
 	memcpy(modelMatrixPtr, scale, 16 * sizeof(GLfloat));
 	
 	
@@ -798,6 +800,7 @@ void drawFBO2Scene(glm::mat4 view) {
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
 
 	// calc distance
@@ -818,7 +821,16 @@ void drawFBO2Scene(glm::mat4 view) {
 
 	*/
 	
+	//REVERSER MODELL!!!!
+	glm::mat4 model = glm::mat4(1.0f);
+	
+	//SCALE DEN TE MOTSATT, BLI RIKTIG OGMOGMOGMOGMOMGOMGOMGOMOG!!!!!!!
+	model = glm::scale(model, glm::vec3(-1.0f, 1.0f, 1.0f));
 
+	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
+	
+	
+	//memcpy(boxModelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
 
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
