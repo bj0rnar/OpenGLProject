@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <iostream>
+#include <math.h>
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -197,6 +198,24 @@ GLint width, height, numChannels;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+//Portal1 and Portal2 position
+glm::vec3 portalOnePosition = glm::vec3(0.0f, -16.5f, -18.5f);
+glm::vec3 portalTwoPosition = glm::vec3(18.0f, -16.5f, -0.5f);
+
+//Check for portal distance
+glm::vec3 playerPortal1Direction;
+glm::vec3 playerPortal2Direction;
+
+//Save individual position
+float cameraPortal1X;
+float cameraPortal1Y;
+float cameraPortal1Z;
+
+float cameraPortal2X;
+float cameraPortal2Y;
+float cameraPortal2Z;
+
 
 //Virtual view 
 glm::mat4 view = glm::mat4(1.0f);
@@ -603,14 +622,14 @@ void drawGLScene(glm::mat4 view) {
 
 
 	//PsuedoGravity
-	if (cameraPos.y >= -19.0f) {
+	if (cameraPos.y >= -16.5f) {
 		cameraPos.y -= 0.1f;
 	}
 
-	if (cameraPos.y < -19.0f) {
+	if (cameraPos.y < -16.5f) {
 		cameraPos.y += 0.1f;
 	}
-	
+	/*
 	counter++;
 
 	if (counter == 500) {
@@ -621,7 +640,7 @@ void drawGLScene(glm::mat4 view) {
 
 		counter = 0;
 	}
-
+	*/
 	glm::vec4 lightP = glm::make_vec4(lightPosition);
 
 	glm::mat4 lightM = glm::mat4(1.0f);
@@ -716,7 +735,14 @@ void drawFBOScene(glm::mat4 view) {
 	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
 
 	// TEST
-	
+	/* NON-SOLUTION, DÆ Æ EIN ANNA MÅTE Å GJERRA DÆ PÅ
+	if (playerPortal1Distance <= 3.0f) {
+		glm::vec3 closeViewHack = glm::vec3(cameraPos.x, 0.0f, cameraPos.z);
+		view = glm::lookAt(portalOnePosition, closeViewHack, cameraUp);
+	}
+	*/
+
+
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
@@ -749,7 +775,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
-	glBindTexture(GL_TEXTURE_2D, textureName);
+	//glBindTexture(GL_TEXTURE_2D, textureName);
 
 
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
@@ -757,7 +783,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// Disable
 	glUseProgram(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 
 }
@@ -774,7 +800,25 @@ void drawFBO2Scene(glm::mat4 view) {
 
 	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
 
-	// TEST
+	// calc distance
+	
+	
+	
+	//playerPortal1Distance = (float)sqrt(cameraPortalX * cameraPortalX + cameraPortalY * cameraPortalY + cameraPortalZ * cameraPortalZ);
+
+	counter++;
+
+	//Keep track of distance between portal 1 and player. Why tho?
+	/*
+	playerPortal1Distance = 
+		glm::vec3(
+		sqrt(cameraPortalX * cameraPortalX), 
+		sqrt(cameraPortalY * cameraPortalY), 
+		sqrt(cameraPortalZ * cameraPortalZ));
+
+	*/
+	
+
 
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
@@ -800,10 +844,10 @@ void drawFBO2Scene(glm::mat4 view) {
 
 
 	//Draw utta texture
-	glBindTexture(GL_TEXTURE_2D, textureName2);
+	//glBindTexture(GL_TEXTURE_2D, textureName2);
 	glBindVertexArray(box2VertexArray);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 
 
 	// ACtivate neste vertex
@@ -971,6 +1015,92 @@ int main(void) {
 
 	// Run a loop until the window is closed
 	while (!glfwWindowShouldClose(window)) {
+		
+		/*
+		TIL FRAMTIDSBJØRNAR:
+
+		DU MÅ HA EIN VEKTOR FRA PORTAL 1 TE PLAYER, Å BRUKE DEN I "CENTER" DELEN AV LOOKAT
+		PROBLEMET Æ ATT NÅR DU SER INN I VERDEN 1, SÅ SER DU INN I FORHOLD TE PORTAL 1, DERFOR RØRE DEN SE
+		IKKJE NÅR DU FLØTTE DE FRAM Å TEBAKE. SÅ DETTA Æ BASICALLY IKKJE NO PROBLEM, BÆRRE TA EIN DISTANSE
+		VEKTOR MELLOM PLAYER OG PORTAL, OG ROTER DEN MÆ 90 GRADER. 
+
+		*/
+		
+		//MATTE FAIL
+		/*
+		cameraPortal1X = portalOnePosition.x - cameraPos.x;
+		cameraPortal1Y = portalOnePosition.y - cameraPos.y;
+		cameraPortal1Z = portalOnePosition.z - cameraPos.z;
+
+
+		cameraPortal2X = portalTwoPosition.x - cameraPos.x;
+		cameraPortal2Y = portalTwoPosition.y - cameraPos.y;
+		cameraPortal2Z = portalTwoPosition.z - cameraPos.z;
+
+		
+		playerPortal1Direction =
+			glm::vec3(
+				cameraPortal1X,
+				cameraPortal1Y,
+				cameraPortal1Z);
+		
+		playerPortal2Direction =
+			glm::vec3(
+				cameraPortal2X,
+				cameraPortal2Y,
+				cameraPortal2Z);
+
+		*/
+		//playerPortal1Distance = cameraPos + playerPortal1Distance;
+		//playerPortal2Distance = cameraPos + playerPortal2Distance;
+
+		//playerPortal1Direction = glm::normalize(portalOnePosition) - glm::normalize(cameraPos);
+		playerPortal1Direction = portalOnePosition - cameraPos;
+		playerPortal1Direction.y = -19.0f;
+
+		playerPortal2Direction = portalTwoPosition - cameraPos;
+		playerPortal2Direction.y = -19.0f;
+
+		if (counter == 500) {
+			std::cout << "1: distanceX: " << playerPortal1Direction.x << std::endl;
+			std::cout << "1: distanceY: " << playerPortal1Direction.y << std::endl;
+			std::cout << "1: distanceZ: " << playerPortal1Direction.z << std::endl;
+			std::cout << "----------- " << std::endl;
+
+
+			std::cout << "2: distanceX: " << playerPortal2Direction.x << std::endl;
+			std::cout << "2: distanceY: " << playerPortal2Direction.y << std::endl;
+			std::cout << "2: distanceZ: " << playerPortal2Direction.z << std::endl;
+			std::cout << "----------- " << std::endl;
+
+			std::cout << "camera x: " << cameraPos.x << std::endl;
+			std::cout << "camera y: " << cameraPos.y << std::endl;
+			std::cout << "camera z: " << cameraPos.z << std::endl;
+			std::cout << "----------- " << std::endl;
+
+			counter = 0;
+		}
+		/*
+		glm::vec4 x = glm::make_vec4(portalOnePosition);
+
+		//glm::mat4 destView = view * x;
+		glm::mat4 rotation(1.0f);
+		rotation = glm::rotate(rotation, 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		
+		glm::vec3 rotated = x * rotation;
+		*/
+
+		//playerPortal1Direction er en retningsvektor mellom player og portal1. Så her vet vi retning.
+
+		//DETTA KINDA FUNKA?
+		
+		glm::mat4 rotated(1.0f);
+		rotated = glm::rotate(rotated, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		
+		glm::vec4 z = glm::make_vec4(playerPortal1Direction);
+
+		glm::vec3 y = z * rotated;
+
 
 		//BIND FRAMEBUFFER FØRST
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
@@ -979,8 +1109,9 @@ int main(void) {
 		//Draw in FBO
 		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		// "Riktig veig"
-		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
-		view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
+		//glm::vec3 viewWorld1 = glm::vec3(playerPortal1Distance.x, cameraPos.y, playerPortal1Distance.z);
+		view = glm::lookAt(portalTwoPosition, y, cameraUp);
+		//view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBOScene(view);
 
@@ -991,14 +1122,27 @@ int main(void) {
 
 		//VERDEN 2???????????????
 
+		glm::mat4 rotated2(1.0f);
+		rotated2 = glm::rotate(rotated2, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		glm::vec4 z2 = glm::make_vec4(playerPortal2Direction);
+
+		glm::vec3 y2 = z2 * rotated;
+
+
+
+
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
 		glViewport(0, 0, 1024, 768);
 
 		//Draw in FBO
 		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		// " Riktig veig"
-		//view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
-		view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
+		//glm::mat4 rotateView(1.0f);
+		//rotateView = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		//glm::vec3 newPos = glm::mat3(rotateView) * cameraPos;
+		view = glm::lookAt(portalOnePosition, y2, cameraUp);
+		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBO2Scene(view);
 
