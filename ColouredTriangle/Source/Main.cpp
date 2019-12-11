@@ -744,6 +744,16 @@ void drawFBOScene(glm::mat4 view) {
 	}
 	*/
 
+	//REVERSER MODELL!!!!
+	glm::mat4 model = glm::mat4(1.0f);
+
+	//SCALE DEN TE MOTSATT, BLI RIKTIG OGMOGMOGMOGMOMGOMGOMGOMOG!!!!!!!
+	//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+	//TRENG IKKKJE
+
+	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
+
 
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
