@@ -1226,8 +1226,10 @@ int main(void) {
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		drawGLScene(view);
 
+		glFinish();
+
 		// Fencing?=???
-		glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		// ACtivate buttons!
 		handleButtons(window);
