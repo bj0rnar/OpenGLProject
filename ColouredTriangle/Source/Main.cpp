@@ -599,7 +599,7 @@ int initGL() {
  * Draw OpenGL screne
  */
 
-void drawGLScene(glm::mat4 view) {
+void drawGLScene(glm::mat4 view, glm::mat4 proj) {
 
 	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
 
@@ -617,6 +617,8 @@ void drawGLScene(glm::mat4 view) {
 	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
+
+	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
 	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
@@ -724,7 +726,7 @@ void drawGLScene(glm::mat4 view) {
 	
 }
 
-void drawFBOScene(glm::mat4 view) {
+void drawFBOScene(glm::mat4 view, glm::mat4 proj) {
 
 	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
 
@@ -759,6 +761,9 @@ void drawFBOScene(glm::mat4 view) {
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 	
+
+
+	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
 	glUseProgram(programName);
 
@@ -800,7 +805,7 @@ void drawFBOScene(glm::mat4 view) {
 
 }
 
-void drawFBO2Scene(glm::mat4 view) {
+void drawFBO2Scene(glm::mat4 view, glm::mat4 proj) {
 
 	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
 
@@ -1136,7 +1141,22 @@ int main(void) {
 
 	
 		view = glm::lookAt(portalTwoPosition, playerPortalRotation, cameraUp);
-		drawFBOScene(view);
+
+
+		float zdistance = portalOnePosition.z - cameraPos.z;
+		float squaredDistance = sqrt(zdistance * zdistance);
+		float result = (squaredDistance / 10) / 2;
+		
+		if (result < 1.0f)
+			result = 2.58 - result;
+		else
+			result = 1.57;
+			
+		std::cout << "result is: " << result << std::endl;
+
+		glm::mat4 fbo1proj = glm::perspective(result, 1024.0f / 768.0f, 0.1f, 100.0f);
+
+		drawFBOScene(view, fbo1proj);
 
 		//FENCING???
 		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -1167,7 +1187,12 @@ int main(void) {
 		view = glm::lookAt(portalOnePosition, playerPortal2Rotation, cameraUp);
 		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
-		drawFBO2Scene(view);
+
+		
+
+		glm::mat4 fbo2proj = glm::perspective(3.14f / 2.0f, 1024.0f / 768.0f, 0.1f, 100.0f);
+
+		drawFBO2Scene(view, fbo2proj);
 
 		glFinish();
 
@@ -1224,7 +1249,10 @@ int main(void) {
 
 		//Draw IRL
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		drawGLScene(view);
+
+		glm::mat4 regproj =  glm::perspective(3.14f / 2.0f, 1024.0f / 768.0f, 0.1f, 100.0f);
+
+		drawGLScene(view, regproj);
 
 		glFinish();
 
