@@ -750,7 +750,7 @@ void drawFBOScene(glm::mat4 view) {
 	//SCALE DEN TE MOTSATT, BLI RIKTIG OGMOGMOGMOGMOMGOMGOMGOMOG!!!!!!!
 	//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
-	//TRENG IKKKJE
+	//TRENG IKKKJE SCALING HER, DETTA Æ WORKING SOM INTENDED
 
 	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
 
@@ -787,7 +787,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// ACtivate neste vertex
 	glBindVertexArray(boxVertexArray);
-	//glBindTexture(GL_TEXTURE_2D, textureName);
+	glBindTexture(GL_TEXTURE_2D, textureName);
 
 
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
@@ -795,7 +795,7 @@ void drawFBOScene(glm::mat4 view) {
 
 	// Disable
 	glUseProgram(0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 
 }
@@ -866,10 +866,10 @@ void drawFBO2Scene(glm::mat4 view) {
 
 
 	//Draw utta texture
-	//glBindTexture(GL_TEXTURE_2D, textureName2);
+	glBindTexture(GL_TEXTURE_2D, textureName2);
 	glBindVertexArray(box2VertexArray);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 
 	// ACtivate neste vertex
@@ -1078,10 +1078,28 @@ int main(void) {
 
 		//playerPortal1Direction = glm::normalize(portalOnePosition) - glm::normalize(cameraPos);
 		playerPortal1Direction = portalOnePosition - cameraPos;
-		playerPortal1Direction.y = -19.0f;
+		playerPortal1Direction.y = -16.5f;
 
 		playerPortal2Direction = portalTwoPosition - cameraPos;
-		playerPortal2Direction.y = -19.0f;
+		playerPortal2Direction.y = -16.5f;
+
+
+		//To handle all negative Z values multiply with -1. 
+		playerPortal1Direction.z = playerPortal1Direction.z * (-1.0f);
+		
+		
+		
+		/*
+		//LOL HACK
+		if (cameraPos.z > 0.0f) {
+			playerPortal1Direction.z = playerPortal1Direction.z * (-1.0f);
+		}
+
+		//FRINGE CASE, TENK PÅ ETTEPÅ
+		if (cameraFront.z < 0.0f && cameraFront.z < 4.0f) {
+			
+		}
+		*/
 
 		if (counter == 500) {
 			std::cout << "1: distanceX: " << playerPortal1Direction.x << std::endl;
@@ -1119,9 +1137,9 @@ int main(void) {
 		glm::mat4 rotated(1.0f);
 		rotated = glm::rotate(rotated, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		
-		glm::vec4 z = glm::make_vec4(playerPortal1Direction);
+		glm::vec4 convertportal1 = glm::make_vec4(playerPortal1Direction);
 
-		glm::vec3 y = z * rotated;
+		glm::vec3 playerPortalRotation = convertportal1 * rotated;
 
 
 		//BIND FRAMEBUFFER FØRST
@@ -1132,7 +1150,7 @@ int main(void) {
 		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		// "Riktig veig"
 		//glm::vec3 viewWorld1 = glm::vec3(playerPortal1Distance.x, cameraPos.y, playerPortal1Distance.z);
-		view = glm::lookAt(portalTwoPosition, y, cameraUp);
+		view = glm::lookAt(portalTwoPosition, playerPortalRotation, cameraUp);
 		//view = glm::lookAt(glm::vec3(19.0f, -19.0f, -1.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBOScene(view);
@@ -1144,12 +1162,12 @@ int main(void) {
 
 		//VERDEN 2???????????????
 
-		glm::mat4 rotated2(1.0f);
-		rotated2 = glm::rotate(rotated2, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//glm::mat4 rotated2(1.0f);
+		//rotated2 = glm::rotate(rotated2, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-		glm::vec4 z2 = glm::make_vec4(playerPortal2Direction);
+		glm::vec4 convertPortal2 = glm::make_vec4(playerPortal2Direction);
 
-		glm::vec3 y2 = z2 * rotated;
+		glm::vec3 playerPortal2Rotation = convertPortal2 * rotated;
 
 
 
@@ -1163,7 +1181,7 @@ int main(void) {
 		//glm::mat4 rotateView(1.0f);
 		//rotateView = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
 		//glm::vec3 newPos = glm::mat3(rotateView) * cameraPos;
-		view = glm::lookAt(portalOnePosition, y2, cameraUp);
+		view = glm::lookAt(portalOnePosition, playerPortal2Rotation, cameraUp);
 		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 		drawFBO2Scene(view);
