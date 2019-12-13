@@ -762,7 +762,7 @@ void drawFBOScene(glm::mat4 view, glm::mat4 proj) {
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 	
 
-
+	//Custom proj
 	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
 	glUseProgram(programName);
@@ -839,13 +839,14 @@ void drawFBO2Scene(glm::mat4 view, glm::mat4 proj) {
 	//REVERSER MODELL!!!!
 	glm::mat4 model = glm::mat4(1.0f);
 	
-	//SCALE DEN TE MOTSATT, BLI RIKTIG OGMOGMOGMOGMOMGOMGOMGOMOG!!!!!!!
+	//Invert model
 	model = glm::scale(model, glm::vec3(-1.0f, 1.0f, 1.0f));
-
 	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
 	
-	
-	//memcpy(boxModelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
+
+
+	//Custom proj
+	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
@@ -1145,16 +1146,16 @@ int main(void) {
 
 		float zdistance = portalOnePosition.z - cameraPos.z;
 		float squaredDistance = sqrt(zdistance * zdistance);
-		float result = (squaredDistance / 10) / 2;
+		float zresult = (squaredDistance / 10) / 2;
 		
-		if (result < 1.0f)
-			result = 2.58 - result;
+		if (zresult < 1.0f)
+			zresult = 2.58 - zresult;
 		else
-			result = 1.57;
+			zresult = 1.57;
 			
-		std::cout << "result is: " << result << std::endl;
+		
 
-		glm::mat4 fbo1proj = glm::perspective(result, 1024.0f / 768.0f, 0.1f, 100.0f);
+		glm::mat4 fbo1proj = glm::perspective(zresult, 1024.0f / 768.0f, 0.1f, 100.0f);
 
 		drawFBOScene(view, fbo1proj);
 
@@ -1188,9 +1189,21 @@ int main(void) {
 		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
 		//drawGLScene(view);
 
+
+		float xdistance = portalTwoPosition.x - cameraPos.x;
+		float xsquaredDistance = sqrt(xdistance * xdistance);
+		float xresult = (xsquaredDistance / 10) / 2;
 		
 
-		glm::mat4 fbo2proj = glm::perspective(3.14f / 2.0f, 1024.0f / 768.0f, 0.1f, 100.0f);
+		if (xresult < 1.0f)
+			xresult = 2.58 - xresult;
+		else
+			xresult = 1.57;
+
+		std::cout << "xresult is: " << xresult << std::endl;
+
+		glm::mat4 fbo2proj = glm::perspective(xresult, 1024.0f / 768.0f, 0.1f, 100.0f);
+		
 
 		drawFBO2Scene(view, fbo2proj);
 
