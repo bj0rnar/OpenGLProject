@@ -217,11 +217,8 @@ float cameraPortal2Y;
 float cameraPortal2Z;
 
 
-//Virtual view 
+//Set view 
 glm::mat4 view = glm::mat4(1.0f);
-
-//Fencing
-
 
 //Mouse callback
 void handleMouse(GLFWwindow* window, double xpos, double ypos);
@@ -389,87 +386,86 @@ int initGL() {
 
 	//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
-	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+	// Generate and bind second framebuffer
 	glGenFramebuffers(1, &frameBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-	// The texture we're going to render to
+	// Generate empty texture
 	glGenTextures(1, &textureName);
 
-	// "Bind" the newly created texture : all future texture functions will modify this texture
+	// Bind texture
 	glBindTexture(GL_TEXTURE_2D, textureName);
 
-	// tomt bilde
+	// Empty image
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
-	// CUSTOMIZE SJØL
+	// Highest scale of image
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 
-	// "render buffer object"
+	// Generate and bind render buffer
 	glGenRenderbuffers(1, &renderBufferObject);
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+
+	//Bind render buffer with framebuffer
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
 
-	// COLOR ATTACHMENT
+	// Bind texture to framebuffer
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureName, 0);
 
-	// draw buffaaaaaahs
+	// Set size of draw buffer
 	GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+	glDrawBuffers(1, DrawBuffers); 
 
 	// stjælt sjækk
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
-	//_-----------------------------------------------------------------------------------------------------------------------------
-	//_-----------------------------------------------------------------------------------------------------------------------------
-	//_------------------------------------------------VERDEN 2-------------------------------------------------------
-	//_-----------------------------------------------------------------------------------------------------------------------------
-	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+	
+	
+	//------------------------------------------WORLD 2 RENDER TO TEXTURE---------------------------------------------------
+
+	// Generate and bind second framebuffer
 	glGenFramebuffers(1, &framebuffer2);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
 
-	// The texture we're going to render to
+	// Generate empty texture
 	glGenTextures(1, &textureName2);
 
-	// "Bind" the newly created texture : all future texture functions will modify this texture
+	// Bind texture
 	glBindTexture(GL_TEXTURE_2D, textureName2);
 
-	// tomt bilde
+	// Empty image
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
-	// CUSTOMIZE SJØL
+	// Highest scale of image
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 
-	// "render buffer object"
+	// Generate and bind render buffer
 	glGenRenderbuffers(1, &renderBufferObject2);
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject2);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+
+	//Bind render buffer with framebuffer
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject2);
 
-	// COLOR ATTACHMENT
+	// Bind texture to framebuffer
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureName2, 0);
 
-	// draw buffaaaaaahs
-	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+	// Set size of draw buffer
+	glDrawBuffers(1, DrawBuffers); 
 
-	// stjælt sjækk
+	// Borrowed check from website for debugging
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
 
-
-	//_-----------------------------------------------------------------------------------------------------------------------------
-	//_-----------------------------------------------------------------------------------------------------------------------------
-	//_------------------------------------------------VERDEN 2-------------------------------------------------------
-	//_-----------------------------------------------------------------------------------------------------------------------------
 
 		//------------------------------RENDER TO TEXTURE ----------------------------------------------------------
 
@@ -511,25 +507,7 @@ int initGL() {
 	}
 	free(fragmentSource);
 
-	// RENDER TO TEXTURE --------------------------------------------------
-	/* PRØVE UTTA DENNA
-	GLuint renderVertex = glCreateShader(GL_VERTEX_SHADER);
-	int rendervertexLength = 0;
-	char *rendervertexSource = readSourceFile("res/shaders/RenderShader.vert", &rendervertexLength);
-	glShaderSource(renderVertex, 1, (const char * const *)&rendervertexSource, &rendervertexLength);
-	glCompileShader(renderVertex);
-	glGetShaderiv(renderVertex, GL_COMPILE_STATUS, &compileStatus);
-	if (!compileStatus) {
-		GLint logSize = 0;
-		glGetShaderiv(renderVertex, GL_INFO_LOG_LENGTH, &logSize);
-		char *errorLog = (char *)malloc(sizeof(char) * logSize);
-		glGetShaderInfoLog(renderVertex, logSize, &logSize, errorLog);
-		glDeleteShader(renderVertex);
-		printf("VERTEX ERROR %s\n", errorLog);
-		return 0;
-	}
-	free(rendervertexSource);
-	*/
+
 	// Load and compile fragment shader
 	GLuint renderFragment = glCreateShader(GL_FRAGMENT_SHADER);
 	int renderfragmentLength = 0;
@@ -614,17 +592,13 @@ void drawGLScene(glm::mat4 view, glm::mat4 proj) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 
-	// Någgå slekk her tenkte e.
 
-	//memcpy Viewmatrise
-	//memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
-	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
+
 
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
 	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
-	//memcpy(fboViewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
 
 	//PsuedoGravity
@@ -635,18 +609,8 @@ void drawGLScene(glm::mat4 view, glm::mat4 proj) {
 	if (cameraPos.y < -16.5f) {
 		cameraPos.y += 0.1f;
 	}
-	/*
-	counter++;
+	
 
-	if (counter == 500) {
-		std::cout << "x: " << cameraPos.x << std::endl;
-		std::cout << "y: " << cameraPos.y << std::endl;
-		std::cout << "z: " << cameraPos.z << std::endl;
-		std::cout << "----------- " << std::endl;
-
-		counter = 0;
-	}
-	*/
 	glm::vec4 lightP = glm::make_vec4(lightPosition);
 
 	glm::mat4 lightM = glm::mat4(1.0f);
@@ -732,37 +696,25 @@ void drawGLScene(glm::mat4 view, glm::mat4 proj) {
 
 void drawFBOScene(glm::mat4 view, glm::mat4 proj) {
 
-	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
+
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
+	
 	// Clear color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
+	
 
-	// TEST
-	/* NON-SOLUTION, DÆ Æ EIN ANNA MÅTE Å GJERRA DÆ PÅ
-	if (playerPortal1Distance <= 3.0f) {
-		glm::vec3 closeViewHack = glm::vec3(cameraPos.x, 0.0f, cameraPos.z);
-		view = glm::lookAt(portalOnePosition, closeViewHack, cameraUp);
-	}
-	*/
 
-	//REVERSER MODELL!!!!
 	glm::mat4 model = glm::mat4(1.0f);
 
-	//SCALE DEN TE MOTSATT, BLI RIKTIG OGMOGMOGMOGMOMGOMGOMGOMOG!!!!!!!
-	//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-
-	//TRENG IKKKJE SCALING HER, DETTA Æ WORKING SOM INTENDED
 
 	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
 
 
-	//glm::mat4 model = glm::mat4(1.0f);
-	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
+
+
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 	
 
@@ -787,14 +739,14 @@ void drawFBOScene(glm::mat4 view, glm::mat4 proj) {
 	glUseProgram(renderProgram);
 	
 
-	//Draw utta texture
+	//Draw 
 	glBindTexture(GL_TEXTURE_2D, textureName2);
 	glBindVertexArray(box2VertexArray);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 
-	// ACtivate neste vertex
+	// Activate next vertex
 	glBindVertexArray(boxVertexArray);
 	glBindTexture(GL_TEXTURE_2D, textureName);
 
@@ -811,39 +763,19 @@ void drawFBOScene(glm::mat4 view, glm::mat4 proj) {
 
 void drawFBO2Scene(glm::mat4 view, glm::mat4 proj) {
 
-	//glBindFrameBuffer(GL_FRAMEBUFFER, frameBuffer);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	//glBindBuffer(GL_FRAMEBUFFER, frameBuffer);
-	// Clear color and depth buffers
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-	//DETTA Æ DÆ EINASTE SOM UTGJØR EIN ENDRING
-
-	// calc distance
 	
 	
 	
-	//playerPortal1Distance = (float)sqrt(cameraPortalX * cameraPortalX + cameraPortalY * cameraPortalY + cameraPortalZ * cameraPortalZ);
-
-	counter++;
-
-	//Keep track of distance between portal 1 and player. Why tho?
-	/*
-	playerPortal1Distance = 
-		glm::vec3(
-		sqrt(cameraPortalX * cameraPortalX), 
-		sqrt(cameraPortalY * cameraPortalY), 
-		sqrt(cameraPortalZ * cameraPortalZ));
-
-	*/
-	
-	//REVERSER MODELL!!!!
 	glm::mat4 model = glm::mat4(1.0f);
 	
-	//Invert model
+	//Invert model to account for rendered view
 	model = glm::scale(model, glm::vec3(-1.0f, 1.0f, 1.0f));
 	memcpy(modelMatrixPtr, &model[0][0], 16 * sizeof(GLfloat));
 	
@@ -852,8 +784,7 @@ void drawFBO2Scene(glm::mat4 view, glm::mat4 proj) {
 	//Custom proj
 	memcpy(projectionMatrixPtr, &proj[0][0], 16 * sizeof(GLfloat));
 
-	//glm::mat4 model = glm::mat4(1.0f);
-	//model = glm::rotate(model, (float)glfwGetTime() * 0.3f, glm::vec3(0.0f, -1.0f, 0.0f));
+
 	memcpy(viewMatrixPtr, &view[0][0], 16 * sizeof(GLfloat));
 
 
@@ -1058,16 +989,6 @@ int main(void) {
 	// Run a loop until the window is closed
 	while (!glfwWindowShouldClose(window)) {
 		
-		/*
-		TIL FRAMTIDSBJØRNAR:
-
-		DU MÅ HA EIN VEKTOR FRA PORTAL 1 TE PLAYER, Å BRUKE DEN I "CENTER" DELEN AV LOOKAT
-		PROBLEMET Æ ATT NÅR DU SER INN I VERDEN 1, SÅ SER DU INN I FORHOLD TE PORTAL 1, DERFOR RØRE DEN SE
-		IKKJE NÅR DU FLØTTE DE FRAM Å TEBAKE. SÅ DETTA Æ BASICALLY IKKJE NO PROBLEM, BÆRRE TA EIN DISTANSE
-		VEKTOR MELLOM PLAYER OG PORTAL, OG ROTER DEN MÆ 90 GRADER. 
-
-		*/
-		
 
 		//Hacky method for only using X and Z coordinates.
 		playerPortal1Direction = portalOnePosition - cameraPos;
@@ -1080,56 +1001,6 @@ int main(void) {
 		//To handle all negative Z values multiply with -1. 
 		playerPortal1Direction.z = playerPortal1Direction.z * (-1.0f);
 		
-		
-		
-		if (counter == 500) {
-			/*
-			std::cout << "1: distanceX: " << playerPortal1Direction.x << std::endl;
-			std::cout << "1: distanceY: " << playerPortal1Direction.y << std::endl;
-			std::cout << "1: distanceZ: " << playerPortal1Direction.z << std::endl;
-			std::cout << "----------- " << std::endl;
-			
-			
-			std::cout << "2: distanceX: " << playerPortal2Direction.x << std::endl;
-			std::cout << "2: distanceY: " << playerPortal2Direction.y << std::endl;
-			std::cout << "2: distanceZ: " << playerPortal2Direction.z << std::endl;
-			std::cout << "----------- " << std::endl;
-			
-
-			/*
-			std::cout << "portal x: " << portalOnePosition.x << std::endl;
-			std::cout << "portal y: " << portalOnePosition.y << std::endl;
-			std::cout << "portal z: " << portalOnePosition.z << std::endl;
-			*/
-			std::cout << "camera x: " << cameraPos.x << std::endl;
-			std::cout << "camera y: " << cameraPos.y << std::endl;
-			std::cout << "camera z: " << cameraPos.z << std::endl;
-			std::cout << "----------- " << std::endl;
-			
-
-
-			counter = 0;
-		}
-		
-		//Check for camera VS portal collision
-		//checkForCollisions(cameraPos, portalOnePosition);
-
-
-
-
-		/*
-		glm::vec4 x = glm::make_vec4(portalOnePosition);
-
-		//glm::mat4 destView = view * x;
-		glm::mat4 rotation(1.0f);
-		rotation = glm::rotate(rotation, 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-		
-		glm::vec3 rotated = x * rotation;
-		*/
-
-		//playerPortal1Direction er en retningsvektor mellom player og portal1. Så her vet vi retning.
-
-		//DETTA KINDA FUNKA?
 		
 		//Rotate 90 degrees since rendered world is perpendicular to portal
 		glm::mat4 rotated(1.0f);
@@ -1144,7 +1015,8 @@ int main(void) {
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 		glViewport(0, 0, 1024, 768);
 
-	
+		
+		// lookat (p2 position, player -> p1 relation, normal orientation)
 		view = glm::lookAt(portalTwoPosition, playerPortalRotation, cameraUp);
 
 
@@ -1158,22 +1030,13 @@ int main(void) {
 			zresult = 1.57;
 			
 		
-
 		glm::mat4 fbo1proj = glm::perspective(zresult, 1024.0f / 768.0f, 0.1f, 100.0f);
 
 		drawFBOScene(view, fbo1proj);
 
-		//FENCING???
-		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-
 		glFinish();
 
-		//VERDEN 2???????????????
-
-		//glm::mat4 rotated2(1.0f);
-		//rotated2 = glm::rotate(rotated2, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-
+		//---------------------------- FBO2 ----------------------------------
 
 		//Uses previously created rotation, same reason as other portal
 		glm::vec4 convertPortal2 = glm::make_vec4(playerPortal2Direction);
@@ -1183,15 +1046,9 @@ int main(void) {
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2);
 		glViewport(0, 0, 1024, 768);
 
-		//Draw in FBO
-		//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		// " Riktig veig"
-		//glm::mat4 rotateView(1.0f);
-		//rotateView = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
-		//glm::vec3 newPos = glm::mat3(rotateView) * cameraPos;
+		// lookat (p1 position, player -> p2 relation, normal orientation)
 		view = glm::lookAt(portalOnePosition, playerPortal2Rotation, cameraUp);
-		//view = glm::lookAt(glm::vec3(2.0f, -18.0f, -19.0f), cameraPos, cameraUp);
-		//drawGLScene(view);
+	
 
 
 		float xdistance = portalTwoPosition.x - cameraPos.x;
@@ -1204,24 +1061,25 @@ int main(void) {
 		else
 			xresult = 1.57;
 
-		std::cout << "xresult is: " << xresult << std::endl;
-
+		// This solution scales all the FoV in all the portals generated recursively, and since we're 
+		// only dealing with textures here the scaling can ruin the recursive image. 
+		// For normal view use this:
+		//glm::mat4 fbo2proj = glm::perspective(3.14f / 2.0f, 1024.0f / 768.0f, 0.1f, 100.0f);
 		glm::mat4 fbo2proj = glm::perspective(xresult, 1024.0f / 768.0f, 0.1f, 100.0f);
 		
-
 		drawFBO2Scene(view, fbo2proj);
 
 		glFinish();
 
 
+		//-------------------------- DEFAULT FRAMEBUFFER -------------------------------------
+
 		//TELEPORT
-		/*
 		bool portal1enable = true;
 		bool portal2enable = true;
 		
 		//1 til 2
 		if (cameraPos.x > -5.0f && cameraPos.x < 5.0f && cameraPos.z <= -18.5f && portal1enable == true) {
-			//cameraPos = portalTwoPosition;
 			
 
 			
@@ -1238,7 +1096,7 @@ int main(void) {
 			portal2enable = false;
 			
 		}
-
+		
 		
 		//(cameraPos.z > -5.0f && cameraPos.z < 5.0f
 		
@@ -1256,7 +1114,7 @@ int main(void) {
 
 		}
 		
-		*/
+		
 
 
 
